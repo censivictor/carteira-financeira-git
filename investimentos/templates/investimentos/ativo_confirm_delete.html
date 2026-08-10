@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Excluir ativo - Carteira Financeira{% endblock %}
+{% block content %}
+<h2 class="mb-4">Excluir ativo</h2>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p>Tem certeza que quer excluir <strong>{{ object }}</strong>? Essa ação não pode ser desfeita.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Excluir</button>
+            <a href="{% url 'ativo-list' %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

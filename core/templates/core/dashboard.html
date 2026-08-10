@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard - Carteira Financeira{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Dashboard</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Patrimônio investido</div>
+                <div class="fs-4 fw-bold" id="patrimonio-total">R$ {{ patrimonio_total|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Ganho/perda da carteira</div>
+                <div class="fs-4 fw-bold {% if ganho_perda_total_pct >= 0 %}text-gain{% else %}text-loss{% endif %}">
+                    {{ ganho_perda_total_pct|floatformat:2 }}%
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Saldo do mês (renda - gastos)</div>
+                <div class="fs-4 fw-bold {% if saldo_mes_atual >= 0 %}text-gain{% else %}text-loss{% endif %}">
+                    R$ {{ saldo_mes_atual|floatformat:2 }}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">% da renda gasto no mês</div>
+                <div class="fs-4 fw-bold">
+                    {% if pct_gasto_da_renda is not None %}{{ pct_gasto_da_renda|floatformat:1 }}%{% else %}—{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Receita deste mês</div>
+                <div class="fs-5 fw-semibold">R$ {{ receita_mes_atual|floatformat:2 }}</div>
+                {% if variacao_receita_pct is not None %}
+                    <span class="badge {% if variacao_receita_pct >= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ variacao_receita_pct|floatformat:1 }}% vs mês anterior
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">sem dados do mês anterior</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Despesas deste mês</div>
+                <div class="fs-5 fw-semibold">R$ {{ despesa_mes_atual|floatformat:2 }}</div>
+                {% if variacao_despesa_pct is not None %}
+                    <span class="badge {% if variacao_despesa_pct <= 0 %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ variacao_despesa_pct|floatformat:1 }}% vs mês anterior
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">sem dados do mês anterior</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Alocação da carteira</h6>
+                {% if tem_ativos %}
+                    <div class="chart-wrapper"><canvas id="chart-alocacao"></canvas></div>
+                {% else %}
+                    <p class="text-muted mb-0">Nenhum ativo cadastrado ainda. <a href="{% url 'ativo-create' %}">Adicionar ativo</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Gastos por categoria (mês atual)</h6>
+                {% if gastos_por_categoria %}
+                    <div class="chart-wrapper"><canvas id="chart-gastos"></canvas></div>
+                {% else %}
+                    <p class="text-muted mb-0">Nenhuma despesa lançada este mês. <a href="{% url 'despesa-create' %}">Adicionar despesa</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Evolução mensal (últimos 12 meses)</h6>
+                <div class="chart-wrapper"><canvas id="chart-evolucao"></canvas></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Ativos</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle" id="tabela-ativos">
+                        <thead>
+                            <tr>
+                                <th>Ticker</th>
+                                <th>Tipo</th>
+                                <th class="text-end">Quantidade</th>
+                                <th class="text-end">Preço atual</th>
+                                <th class="text-end">Valor atual</th>
+                                <th class="text-end">Ganho/perda</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for a in alocacao %}
+                            <tr data-ticker="{{ a.ticker }}">
+                                <td>{{ a.ticker }}</td>
+                                <td>{{ a.tipo }}</td>
+                                <td class="text-end">{{ a.quantidade }}</td>
+                                <td class="text-end preco-atual">
+                                    R$ {{ a.preco_atual|floatformat:2 }}
+                                    {% if not a.cotacao_disponivel %}<span class="badge bg-warning text-dark">indisponível</span>{% endif %}
+                                </td>
+                                <td class="text-end valor-atual">R$ {{ a.valor_atual|floatformat:2 }}</td>
+                                <td class="text-end {% if a.ganho_perda_pct >= 0 %}text-gain{% else %}text-loss{% endif %}">
+                                    {{ a.ganho_perda_pct|floatformat:2 }}%
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="6" class="text-muted">Nenhum ativo cadastrado.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ alocacao|json_script:"dados-alocacao" }}
+{{ gastos_por_categoria|json_script:"dados-gastos" }}
+{{ evolucao_labels|json_script:"evolucao-labels" }}
+{{ evolucao_receitas|json_script:"evolucao-receitas" }}
+{{ evolucao_despesas|json_script:"evolucao-despesas" }}
+{{ evolucao_saldo|json_script:"evolucao-saldo" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    window.COTACOES_JSON_URL = "{% url 'cotacoes-json' %}";
+</script>
+<script src="{% static 'js/dashboard.js' %}"></script>
+{% endblock %}

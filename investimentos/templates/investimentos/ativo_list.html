@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Investimentos - Carteira Financeira{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Investimentos</h2>
+    <a href="{% url 'ativo-create' %}" class="btn btn-primary">+ Novo ativo</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th class="text-end">Quantidade</th>
+                    <th class="text-end">Preço médio de compra</th>
+                    <th class="text-end">Valor investido</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ativo in ativos %}
+                <tr>
+                    <td>{{ ativo.ticker }}</td>
+                    <td>{{ ativo.nome|default:"—" }}</td>
+                    <td>{{ ativo.get_tipo_display }}</td>
+                    <td class="text-end">{{ ativo.quantidade }}</td>
+                    <td class="text-end">R$ {{ ativo.preco_medio_compra|floatformat:2 }}</td>
+                    <td class="text-end">R$ {{ ativo.valor_investido|floatformat:2 }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'ativo-update' ativo.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        <a href="{% url 'ativo-delete' ativo.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="7" class="text-muted text-center py-4">Nenhum ativo cadastrado ainda.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

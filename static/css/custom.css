@@ -1,0 +1,17 @@
+.card-metric {
+    border: none;
+    border-radius: 0.75rem;
+}
+
+.text-gain {
+    color: #198754;
+}
+
+.text-loss {
+    color: #dc3545;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+}
