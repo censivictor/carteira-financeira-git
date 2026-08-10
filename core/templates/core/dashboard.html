@@ -139,10 +139,10 @@
                             <tr data-ticker="{{ a.ticker }}">
                                 <td>{{ a.ticker }}</td>
                                 <td>{{ a.tipo }}</td>
-                                <td class="text-end">{{ a.quantidade }}</td>
+                                <td class="text-end">{% if a.quantidade is not None %}{{ a.quantidade }}{% else %}—{% endif %}</td>
                                 <td class="text-end preco-atual">
-                                    R$ {{ a.preco_atual|floatformat:2 }}
-                                    {% if not a.cotacao_disponivel %}<span class="badge bg-warning text-dark">indisponível</span>{% endif %}
+                                    {% if a.preco_atual is not None %}R$ {{ a.preco_atual|floatformat:2 }}{% else %}—{% endif %}
+                                    {% if not a.cotacao_disponivel %}<span class="badge bg-warning text-dark">estimativa</span>{% endif %}
                                 </td>
                                 <td class="text-end valor-atual">R$ {{ a.valor_atual|floatformat:2 }}</td>
                                 <td class="text-end {% if a.ganho_perda_pct >= 0 %}text-gain{% else %}text-loss{% endif %}">

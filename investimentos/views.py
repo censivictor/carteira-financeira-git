@@ -7,6 +7,8 @@ from . import services
 from .forms import AtivoForm
 from .models import Ativo
 
+TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
+
 
 class AtivoListView(LoginRequiredMixin, ListView):
     model = Ativo
@@ -39,12 +41,14 @@ class AtivoDeleteView(LoginRequiredMixin, DeleteView):
 
 def cotacoes_json(request):
     """Endpoint JSON usado pelo polling do dashboard (atualização periódica
-    de preços sem recarregar a página)."""
+    de preços sem recarregar a página). Renda fixa não entra aqui — o valor
+    muda por dia, não por minuto, então não faz sentido recalcular a cada
+    polling (o dashboard já mostra o valor calculado no carregamento)."""
     if not request.user.is_authenticated:
         return JsonResponse({'detail': 'Não autenticado.'}, status=401)
 
     ativos = Ativo.objects.filter(ativo_flag=True)
-    tickers = [a.ticker for a in ativos if a.tipo == Ativo.Tipo.ACAO]
+    tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
     cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
 
     cotacoes_acoes = services.get_cotacoes_acoes(tickers)
@@ -52,10 +56,13 @@ def cotacoes_json(request):
 
     resultado = {}
     for ativo in ativos:
-        if ativo.tipo == Ativo.Tipo.ACAO:
+        if ativo.tipo in TIPOS_COTADOS_B3:
             info = cotacoes_acoes.get(ativo.ticker, {})
-        else:
+        elif ativo.tipo == Ativo.Tipo.CRIPTO:
             info = cotacoes_cripto.get(ativo.coingecko_id, {})
+        else:
+            continue  # RENDA_FIXA não é atualizada pelo polling
+
         preco = info.get('preco')
         resultado[ativo.ticker] = {
             'preco': preco,
@@ -64,3 +71,24 @@ def cotacoes_json(request):
         }
 
     return JsonResponse(resultado)
+
+
+def buscar_ativos_json(request):
+    """Autocomplete usado no formulário de novo/editar ativo.
+
+    GET params: tipo (ACAO|FII|CRIPTO), q (texto digitado).
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'detail': 'Não autenticado.'}, status=401)
+
+    tipo = request.GET.get('tipo', '')
+    q = request.GET.get('q', '')
+
+    if tipo in ('ACAO', 'FII'):
+        resultados = services.buscar_tickers_b3(q, tipo)
+    elif tipo == 'CRIPTO':
+        resultados = services.buscar_cripto(q)
+    else:
+        resultados = []
+
+    return JsonResponse({'results': resultados})

@@ -14,8 +14,8 @@
                     <th>Ticker</th>
                     <th>Nome</th>
                     <th>Tipo</th>
-                    <th class="text-end">Quantidade</th>
-                    <th class="text-end">Preço médio de compra</th>
+                    <th class="text-end">Quantidade / Indexador</th>
+                    <th class="text-end">Preço médio / Aplicado desde</th>
                     <th class="text-end">Valor investido</th>
                     <th></th>
                 </tr>
@@ -26,8 +26,13 @@
                     <td>{{ ativo.ticker }}</td>
                     <td>{{ ativo.nome|default:"—" }}</td>
                     <td>{{ ativo.get_tipo_display }}</td>
-                    <td class="text-end">{{ ativo.quantidade }}</td>
-                    <td class="text-end">R$ {{ ativo.preco_medio_compra|floatformat:2 }}</td>
+                    {% if ativo.tipo == 'RENDA_FIXA' %}
+                        <td class="text-end">{{ ativo.get_indexador_display }} · {{ ativo.taxa_contratada }}%</td>
+                        <td class="text-end">desde {{ ativo.data_aplicacao|date:"d/m/Y" }}</td>
+                    {% else %}
+                        <td class="text-end">{{ ativo.quantidade }}</td>
+                        <td class="text-end">R$ {{ ativo.preco_medio_compra|floatformat:2 }}</td>
+                    {% endif %}
                     <td class="text-end">R$ {{ ativo.valor_investido|floatformat:2 }}</td>
                     <td class="text-end">
                         <a href="{% url 'ativo-update' ativo.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>

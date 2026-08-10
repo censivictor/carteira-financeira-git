@@ -152,7 +152,7 @@ COTACAO_CACHE_TTL = env.int('COTACAO_CACHE_TTL', default=60)
 # Token opcional do brapi.dev (https://brapi.dev) — algumas rotas/planos
 # exigem cadastro gratuito. Sem token, o app funciona com o que a API
 # liberar publicamente.
-BRAPI_TOKEN = env('BRAPI_TOKEN', default='')
+BRAPI_TOKEN = env('BRAPI_TOKEN', default='').strip()
 
 
 # Autenticação — app hospedado publicamente, login é obrigatório em tudo.

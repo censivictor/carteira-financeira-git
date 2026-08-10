@@ -11,6 +11,7 @@ from investimentos import services
 from investimentos.models import Ativo
 
 MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
 
 
 def _meses_recentes(n=12, referencia=None):
@@ -38,7 +39,7 @@ def _variacao_pct(atual: Decimal, anterior: Decimal):
 def dashboard(request):
     # --- Carteira de investimentos ---
     ativos = Ativo.objects.filter(ativo_flag=True)
-    tickers = [a.ticker for a in ativos if a.tipo == Ativo.Tipo.ACAO]
+    tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
     cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
 
     cotacoes_acoes = services.get_cotacoes_acoes(tickers)
@@ -49,27 +50,43 @@ def dashboard(request):
     valor_atual_total = Decimal('0')
 
     for ativo in ativos:
-        if ativo.tipo == Ativo.Tipo.ACAO:
-            info = cotacoes_acoes.get(ativo.ticker, {})
-        else:
-            info = cotacoes_cripto.get(ativo.coingecko_id, {})
-
-        preco = info.get('preco')
-        cotacao_disponivel = preco is not None
-        # sem cotação disponível (API fora do ar), usa o preço médio de
-        # compra como fallback só pra não zerar o card de patrimônio
-        preco_decimal = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
-
-        valor_atual = ativo.quantidade * preco_decimal
         valor_investido = ativo.valor_investido
+
+        if ativo.tipo in TIPOS_COTADOS_B3:
+            info = cotacoes_acoes.get(ativo.ticker, {})
+            preco = info.get('preco')
+            cotacao_disponivel = preco is not None
+            # sem cotação disponível (API fora do ar), usa o preço médio de
+            # compra como fallback só pra não zerar o card de patrimônio
+            preco_decimal = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
+            valor_atual = ativo.quantidade * preco_decimal
+            quantidade_exibicao = float(ativo.quantidade)
+            preco_exibicao = float(preco_decimal)
+
+        elif ativo.tipo == Ativo.Tipo.CRIPTO:
+            info = cotacoes_cripto.get(ativo.coingecko_id, {})
+            preco = info.get('preco')
+            cotacao_disponivel = preco is not None
+            preco_decimal = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
+            valor_atual = ativo.quantidade * preco_decimal
+            quantidade_exibicao = float(ativo.quantidade)
+            preco_exibicao = float(preco_decimal)
+
+        else:  # RENDA_FIXA — sem cotação de mercado, valor estimado via taxa do BCB
+            valor_calculado = services.calcular_valor_atual_renda_fixa(ativo)
+            cotacao_disponivel = valor_calculado is not None
+            valor_atual = valor_calculado if cotacao_disponivel else ativo.valor_aplicado
+            quantidade_exibicao = None
+            preco_exibicao = None
+
         valor_atual_total += valor_atual
         valor_investido_total += valor_investido
 
         alocacao.append({
             'ticker': ativo.ticker,
             'tipo': ativo.get_tipo_display(),
-            'quantidade': float(ativo.quantidade),
-            'preco_atual': float(preco_decimal),
+            'quantidade': quantidade_exibicao,
+            'preco_atual': preco_exibicao,
             'valor_atual': float(valor_atual),
             'valor_investido': float(valor_investido),
             'ganho_perda_pct': _variacao_pct(valor_atual, valor_investido) or 0,

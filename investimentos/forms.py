@@ -13,34 +13,67 @@ class AtivoForm(forms.ModelForm):
             'coingecko_id',
             'quantidade',
             'preco_medio_compra',
+            'indexador',
+            'taxa_contratada',
+            'valor_aplicado',
+            'data_aplicacao',
             'ativo_flag',
         ]
         labels = {
             'ticker': 'Ticker',
             'nome': 'Nome',
             'tipo': 'Tipo',
-            'coingecko_id': 'ID do CoinGecko',
+            'coingecko_id': 'Criptomoeda (digite o nome pra buscar)',
             'quantidade': 'Quantidade',
             'preco_medio_compra': 'Preço médio de compra (R$)',
+            'indexador': 'Indexador',
+            'taxa_contratada': 'Taxa contratada (%)',
+            'valor_aplicado': 'Valor aplicado (R$)',
+            'data_aplicacao': 'Data da aplicação',
             'ativo_flag': 'Ativo (não arquivado)',
         }
         widgets = {
-            'ticker': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PETR4 ou BTC'}),
+            'ticker': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'PETR4, MXRF11 ou rótulo (renda fixa)',
+                'autocomplete': 'off',
+            }),
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'tipo': forms.Select(attrs={'class': 'form-select'}),
-            'coingecko_id': forms.TextInput(
-                attrs={'class': 'form-control', 'placeholder': 'bitcoin (só p/ cripto)'}
-            ),
+            'tipo': forms.Select(attrs={'class': 'form-select', 'id': 'id_tipo'}),
+            'coingecko_id': forms.TextInput(attrs={
+                'class': 'form-control', 'placeholder': 'ex: digite "bitcoin"', 'autocomplete': 'off',
+            }),
             'quantidade': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
             'preco_medio_compra': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'indexador': forms.Select(attrs={'class': 'form-select'}),
+            'taxa_contratada': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'valor_aplicado': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'data_aplicacao': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'ativo_flag': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        help_texts = {
+            'taxa_contratada': (
+                'Para CDI/Selic: % do indexador (ex: 110 = 110% do CDI). '
+                'Para Prefixado: taxa fixa ao ano (ex: 12.5 = 12,5% a.a.).'
+            ),
         }
 
     def clean(self):
         cleaned = super().clean()
-        if cleaned.get('tipo') == 'CRIPTO' and not cleaned.get('coingecko_id'):
-            self.add_error(
-                'coingecko_id',
-                'Obrigatório para criptomoedas — use o ID do CoinGecko (ex: bitcoin, ethereum).',
-            )
+        tipo = cleaned.get('tipo')
+
+        if tipo in (Ativo.Tipo.ACAO, Ativo.Tipo.FII, Ativo.Tipo.CRIPTO):
+            for campo in ('quantidade', 'preco_medio_compra'):
+                if cleaned.get(campo) is None:
+                    self.add_error(campo, 'Obrigatório para este tipo de ativo.')
+            if tipo == Ativo.Tipo.CRIPTO and not cleaned.get('coingecko_id'):
+                self.add_error(
+                    'coingecko_id',
+                    'Obrigatório para criptomoedas — busque pelo nome e selecione uma sugestão.',
+                )
+
+        elif tipo == Ativo.Tipo.RENDA_FIXA:
+            for campo in ('indexador', 'taxa_contratada', 'valor_aplicado', 'data_aplicacao'):
+                if not cleaned.get(campo):
+                    self.add_error(campo, 'Obrigatório para renda fixa.')
+
         return cleaned

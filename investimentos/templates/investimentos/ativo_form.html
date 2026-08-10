@@ -1,23 +1,79 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{% if object %}Editar{% else %}Novo{% endif %} ativo - Carteira Financeira{% endblock %}
 {% block content %}
 <h2 class="mb-4">{% if object %}Editar ativo{% else %}Novo ativo{% endif %}</h2>
 
 <div class="card shadow-sm">
     <div class="card-body">
-        <form method="post" novalidate>
+        <form method="post" novalidate id="form-ativo">
             {% csrf_token %}
+
             {% for field in form %}
-                <div class="mb-3">
-                    <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
-                    {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                </div>
+                {% if field.name == 'tipo' %}
+                    <div class="mb-3" data-tipo-show="SEMPRE">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                {% elif field.name == 'ticker' %}
+                    <div class="mb-3 position-relative" data-tipo-show="SEMPRE">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <div class="form-text" id="ticker-help">{{ field.help_text }}</div>
+                        <div id="ticker-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 10; display: none;"></div>
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                {% elif field.name == 'nome' %}
+                    <div class="mb-3" data-tipo-show="SEMPRE">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                    </div>
+
+                {% elif field.name == 'coingecko_id' %}
+                    <div class="mb-3 position-relative" data-tipo-show="CRIPTO">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        <div id="coingecko-suggestions" class="list-group position-absolute w-100 shadow-sm" style="z-index: 10; display: none;"></div>
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                {% elif field.name == 'quantidade' or field.name == 'preco_medio_compra' %}
+                    <div class="mb-3" data-tipo-show="ACAO,FII,CRIPTO">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                {% elif field.name == 'indexador' or field.name == 'taxa_contratada' or field.name == 'valor_aplicado' or field.name == 'data_aplicacao' %}
+                    <div class="mb-3" data-tipo-show="RENDA_FIXA">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                {% else %}
+                    <div class="mb-3" data-tipo-show="SEMPRE">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endif %}
             {% endfor %}
+
             <button type="submit" class="btn btn-primary">Salvar</button>
             <a href="{% url 'ativo-list' %}" class="btn btn-outline-secondary">Cancelar</a>
         </form>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    window.BUSCAR_ATIVOS_URL = "{% url 'buscar-ativos-json' %}";
+</script>
+<script src="{% static 'js/ativo_form.js' %}"></script>
 {% endblock %}
