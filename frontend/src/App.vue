@@ -28,10 +28,10 @@ function itemAtivo(item) {
 const navItems = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard, disponivel: true },
   { label: 'Investimentos', to: '/investimentos', icon: Wallet, disponivel: true },
-  { label: 'Despesas', to: '#', icon: ArrowDownCircle, disponivel: false },
-  { label: 'Receitas', to: '#', icon: ArrowUpCircle, disponivel: false },
-  { label: 'Categorias', to: '#', icon: Tags, disponivel: false },
-  { label: 'Recorrentes', to: '#', icon: Repeat, disponivel: false },
+  { label: 'Despesas', to: '/financas/despesas', icon: ArrowDownCircle, disponivel: true },
+  { label: 'Receitas', to: '/financas/receitas', icon: ArrowUpCircle, disponivel: true },
+  { label: 'Categorias', to: '/financas/categorias', icon: Tags, disponivel: true },
+  { label: 'Recorrentes', to: '/financas/recorrentes', icon: Repeat, disponivel: true },
 ]
 
 async function sair() {

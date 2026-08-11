@@ -33,6 +33,66 @@ const routes = [
     name: 'ativo-detail',
     component: () => import('@/views/investimentos/AtivoDetailView.vue'),
   },
+  {
+    path: '/financas/categorias',
+    name: 'categoria-list',
+    component: () => import('@/views/financas/CategoriaListView.vue'),
+  },
+  {
+    path: '/financas/categorias/nova',
+    name: 'categoria-create',
+    component: () => import('@/views/financas/CategoriaFormView.vue'),
+  },
+  {
+    path: '/financas/categorias/:id/editar',
+    name: 'categoria-update',
+    component: () => import('@/views/financas/CategoriaFormView.vue'),
+  },
+  {
+    path: '/financas/despesas',
+    name: 'despesa-list',
+    component: () => import('@/views/financas/DespesaListView.vue'),
+  },
+  {
+    path: '/financas/despesas/nova',
+    name: 'despesa-create',
+    component: () => import('@/views/financas/DespesaFormView.vue'),
+  },
+  {
+    path: '/financas/despesas/:id/editar',
+    name: 'despesa-update',
+    component: () => import('@/views/financas/DespesaFormView.vue'),
+  },
+  {
+    path: '/financas/receitas',
+    name: 'receita-list',
+    component: () => import('@/views/financas/ReceitaListView.vue'),
+  },
+  {
+    path: '/financas/receitas/nova',
+    name: 'receita-create',
+    component: () => import('@/views/financas/ReceitaFormView.vue'),
+  },
+  {
+    path: '/financas/receitas/:id/editar',
+    name: 'receita-update',
+    component: () => import('@/views/financas/ReceitaFormView.vue'),
+  },
+  {
+    path: '/financas/recorrentes',
+    name: 'recorrente-list',
+    component: () => import('@/views/financas/RecorrenteListView.vue'),
+  },
+  {
+    path: '/financas/recorrentes/nova',
+    name: 'recorrente-create',
+    component: () => import('@/views/financas/RecorrenteFormView.vue'),
+  },
+  {
+    path: '/financas/recorrentes/:id/editar',
+    name: 'recorrente-update',
+    component: () => import('@/views/financas/RecorrenteFormView.vue'),
+  },
 ]
 
 const router = createRouter({

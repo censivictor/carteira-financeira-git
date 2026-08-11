@@ -140,9 +140,15 @@ const opcoesComparacao = {
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <ChartCard title="Alocação da carteira" :empty="!dados.tem_ativos" empty-text="Nenhum ativo cadastrado ainda.">
         <Pie :data="chartAlocacao" :options="opcoesGrafico" />
+        <template #empty-link>
+          <RouterLink to="/investimentos/novo" class="font-medium text-wine hover:underline">Adicionar ativo</RouterLink>
+        </template>
       </ChartCard>
       <ChartCard title="Gastos por categoria (mês atual)" :empty="!dados.gastos_por_categoria.length" empty-text="Nenhuma despesa lançada este mês.">
         <Pie :data="chartGastos" :options="opcoesGrafico" />
+        <template #empty-link>
+          <RouterLink to="/financas/despesas/nova" class="font-medium text-wine hover:underline">Adicionar despesa</RouterLink>
+        </template>
       </ChartCard>
     </div>
 
@@ -157,6 +163,9 @@ const opcoesComparacao = {
         :orcamento="o.orcamento"
         :pct="o.pct"
       />
+      <RouterLink to="/financas/categorias" class="mt-2 inline-block text-xs font-medium text-wine hover:underline">
+        Gerenciar categorias e orçamentos
+      </RouterLink>
     </div>
 
     <!-- Comparação com o mercado -->
