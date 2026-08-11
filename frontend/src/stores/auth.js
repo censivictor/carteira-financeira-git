@@ -25,10 +25,15 @@ export const useAuthStore = defineStore('auth', () => {
     username.value = data.username
   }
 
+  async function signup(usernameInput, password, password2) {
+    const data = await api.post('/auth/signup/', { username: usernameInput, password, password2 })
+    username.value = data.username
+  }
+
   async function logout() {
     await api.post('/auth/logout/')
     username.value = null
   }
 
-  return { username, status, isAuthenticated, fetchMe, login, logout }
+  return { username, status, isAuthenticated, fetchMe, login, signup, logout }
 })

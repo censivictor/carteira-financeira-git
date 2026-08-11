@@ -170,12 +170,6 @@ BRAPI_TOKEN = env('BRAPI_TOKEN', default='').strip()
 COINGECKO_API_KEY = env('COINGECKO_API_KEY', default='').strip()
 
 
-# Autenticação — app hospedado publicamente, login é obrigatório em tudo.
-LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT_URL = 'login'
-
-
 # API (consumida pelo front Vue em desenvolvimento — frontend/) — auth por
 # sessão Django (mesmo login de sempre), não JWT. O Vite dev server faz
 # proxy de /api pro Django, então cookie de sessão/CSRF funcionam sem

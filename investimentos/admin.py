@@ -5,8 +5,8 @@ from .models import Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
 
 @admin.register(Ativo)
 class AtivoAdmin(admin.ModelAdmin):
-    list_display = ('ticker', 'tipo', 'quantidade', 'preco_medio_compra', 'ativo_flag')
-    list_filter = ('tipo', 'ativo_flag')
+    list_display = ('ticker', 'tipo', 'usuario', 'quantidade', 'preco_medio_compra', 'ativo_flag')
+    list_filter = ('tipo', 'ativo_flag', 'usuario')
     search_fields = ('ticker', 'nome')
 
 
@@ -26,5 +26,6 @@ class ProventoAdmin(admin.ModelAdmin):
 
 @admin.register(PatrimonioSnapshot)
 class PatrimonioSnapshotAdmin(admin.ModelAdmin):
-    list_display = ('data', 'valor_total', 'valor_investido_total')
+    list_display = ('data', 'usuario', 'valor_total', 'valor_investido_total')
+    list_filter = ('usuario',)
     date_hierarchy = 'data'

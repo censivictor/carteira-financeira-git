@@ -1,6 +1,7 @@
 from decimal import Decimal
 from functools import cached_property
 
+from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
@@ -30,6 +31,7 @@ class Ativo(models.Model):
         SELIC = 'SELIC', '% da Selic'
         PREFIXADO = 'PREFIXADO', 'Prefixado (taxa fixa ao ano)'
 
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ativos')
     ticker = models.CharField(
         max_length=15,
         help_text=(
@@ -70,7 +72,7 @@ class Ativo(models.Model):
     atualizado_em = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('ticker', 'tipo')
+        unique_together = ('usuario', 'ticker', 'tipo')
         ordering = ['tipo', 'ticker']
         verbose_name = 'Ativo'
         verbose_name_plural = 'Ativos'
@@ -216,13 +218,15 @@ class PatrimonioSnapshot(models.Model):
     longo do tempo'. Não é retroativo: só existe a partir de quando o
     usuário começou a usar essa versão do app."""
 
-    data = models.DateField(unique=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='snapshots')
+    data = models.DateField()
     valor_total = models.DecimalField(max_digits=18, decimal_places=2)
     valor_investido_total = models.DecimalField(max_digits=18, decimal_places=2)
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['data']
+        unique_together = ('usuario', 'data')
         verbose_name = 'Snapshot de patrimônio'
         verbose_name_plural = 'Snapshots de patrimônio'
 

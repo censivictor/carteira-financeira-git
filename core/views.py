@@ -1,9 +1,7 @@
 from decimal import Decimal
 
-from django.contrib.auth.decorators import login_required
 from django.db.models import Min, Sum
 from django.db.models.functions import TruncMonth
-from django.shortcuts import render
 from django.utils import timezone
 
 from financas import services as financas_services
@@ -36,16 +34,13 @@ def _variacao_pct(atual: Decimal, anterior: Decimal):
     return float((atual - anterior) / anterior * 100)
 
 
-def build_dashboard_data():
+def build_dashboard_data(usuario):
     """Monta todo o dict de dados do dashboard — agregação de investimentos,
     proventos, comparação com mercado, receitas/despesas, orçamento e
-    evolução mensal. Função pura (sem `request`), reaproveitada tanto pela
-    view Django (`dashboard`, renderiza template) quanto pela API DRF
-    (`core/api_views.py::DashboardAPIView`, devolve JSON) — assim os dois
-    front-ends (o antigo em templates e o novo em Vue) sempre mostram
-    exatamente os mesmos números, calculados uma única vez."""
+    evolução mensal — tudo restrito aos dados de `usuario`. Reaproveitada
+    pela API DRF (`core/api_views.py::DashboardAPIView`)."""
     # --- Carteira de investimentos ---
-    ativos = Ativo.objects.filter(ativo_flag=True)
+    ativos = Ativo.objects.filter(usuario=usuario, ativo_flag=True)
     tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
     cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
 
@@ -124,7 +119,7 @@ def build_dashboard_data():
     # SQL, já que valor_total é uma property calculada (quantidade na data-com).
     proventos_mes = Decimal('0')
     proventos_total = Decimal('0')
-    for p in Provento.objects.select_related('ativo'):
+    for p in Provento.objects.filter(ativo__usuario=usuario).select_related('ativo'):
         valor = p.valor_total
         proventos_total += valor
         data_ref = p.data_pagamento or p.data_com
@@ -140,7 +135,7 @@ def build_dashboard_data():
     # resolvida contra CDI/Selic internamente). Sem transação nenhuma, a
     # seção simplesmente não aparece (data_inicio_investimentos = None).
     data_inicio_investimentos = TransacaoAtivo.objects.filter(
-        ativo__ativo_flag=True
+        ativo__usuario=usuario, ativo__ativo_flag=True
     ).aggregate(m=Min('data'))['m']
 
     retorno_mercado_pct = None
@@ -163,25 +158,28 @@ def build_dashboard_data():
     # update_or_create por data: reabrir o dashboard no mesmo dia só
     # atualiza o snapshot de hoje, nunca duplica.
     PatrimonioSnapshot.objects.update_or_create(
+        usuario=usuario,
         data=hoje,
         defaults={
             'valor_total': valor_atual_total,
             'valor_investido_total': valor_investido_total,
         },
     )
-    snapshots = PatrimonioSnapshot.objects.order_by('data')
+    snapshots = PatrimonioSnapshot.objects.filter(usuario=usuario).order_by('data')
     patrimonio_historico_labels = [s.data.strftime('%d/%m/%y') for s in snapshots]
     patrimonio_historico_valores = [float(s.valor_total) for s in snapshots]
 
     # --- Despesas recorrentes do mês (aluguel, assinaturas...) ---
     # Idempotente: se já existe a despesa gerada desse mês, não duplica.
-    financas_services.gerar_despesas_recorrentes_do_mes(referencia=hoje)
+    financas_services.gerar_despesas_recorrentes_do_mes(usuario, referencia=hoje)
 
     ano_atual, mes_atual = hoje.year, hoje.month
     ano_anterior, mes_anterior = _meses_recentes(2, referencia=hoje.replace(day=1))[0]
 
     def total_mes(model, ano, mes):
-        return model.objects.filter(data__year=ano, data__month=mes).aggregate(t=Sum('valor'))['t'] or Decimal('0')
+        return model.objects.filter(
+            usuario=usuario, data__year=ano, data__month=mes
+        ).aggregate(t=Sum('valor'))['t'] or Decimal('0')
 
     receita_mes_atual = total_mes(Receita, ano_atual, mes_atual)
     despesa_mes_atual = total_mes(Despesa, ano_atual, mes_atual)
@@ -195,7 +193,7 @@ def build_dashboard_data():
 
     # --- Gastos por categoria (mês atual) — pizza 2 ---
     gastos_por_categoria = list(
-        Despesa.objects.filter(data__year=ano_atual, data__month=mes_atual)
+        Despesa.objects.filter(usuario=usuario, data__year=ano_atual, data__month=mes_atual)
         .values('categoria__nome', 'categoria__cor')
         .annotate(total=Sum('valor'))
         .order_by('-total')
@@ -206,12 +204,12 @@ def build_dashboard_data():
     # esse mês (0%) — não só as que já têm despesa lançada.
     totais_por_categoria = {
         g['categoria__nome']: g['total']
-        for g in Despesa.objects.filter(data__year=ano_atual, data__month=mes_atual)
+        for g in Despesa.objects.filter(usuario=usuario, data__year=ano_atual, data__month=mes_atual)
         .values('categoria__nome')
         .annotate(total=Sum('valor'))
     }
     orcamentos = []
-    for cat in CategoriaDespesa.objects.filter(orcamento_mensal__isnull=False):
+    for cat in CategoriaDespesa.objects.filter(usuario=usuario, orcamento_mensal__isnull=False):
         total = totais_por_categoria.get(cat.nome, Decimal('0'))
         orcamentos.append({
             'categoria': cat.nome,
@@ -227,11 +225,13 @@ def build_dashboard_data():
 
     receitas_por_mes = {
         (d['mes'].year, d['mes'].month): d['total']
-        for d in Receita.objects.annotate(mes=TruncMonth('data')).values('mes').annotate(total=Sum('valor'))
+        for d in Receita.objects.filter(usuario=usuario)
+        .annotate(mes=TruncMonth('data')).values('mes').annotate(total=Sum('valor'))
     }
     despesas_por_mes = {
         (d['mes'].year, d['mes'].month): d['total']
-        for d in Despesa.objects.annotate(mes=TruncMonth('data')).values('mes').annotate(total=Sum('valor'))
+        for d in Despesa.objects.filter(usuario=usuario)
+        .annotate(mes=TruncMonth('data')).values('mes').annotate(total=Sum('valor'))
     }
 
     evolucao_labels = [f'{MESES_PT[m]}/{str(a)[2:]}' for a, m in meses]
@@ -269,8 +269,3 @@ def build_dashboard_data():
         'comparacao_labels': comparacao_labels,
         'comparacao_valores': comparacao_valores,
     }
-
-
-@login_required
-def dashboard(request):
-    return render(request, 'core/dashboard.html', build_dashboard_data())

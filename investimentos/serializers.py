@@ -36,6 +36,13 @@ class TransacaoAtivoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'criado_em']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request:
+            # sem isso, o campo aceitaria o ID de um ativo de outro usuário.
+            self.fields['ativo'].queryset = Ativo.objects.filter(usuario=request.user)
+
     def validate(self, attrs):
         ativo = attrs.get('ativo') or getattr(self.instance, 'ativo', None)
         tipo = attrs.get('tipo') or getattr(self.instance, 'tipo', None)
@@ -67,6 +74,12 @@ class ProventoSerializer(serializers.ModelSerializer):
             'observacao', 'criado_em',
         ]
         read_only_fields = ['id', 'criado_em']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request:
+            self.fields['ativo'].queryset = Ativo.objects.filter(usuario=request.user)
 
     def validate_ativo(self, ativo):
         if ativo.tipo not in (Ativo.Tipo.ACAO, Ativo.Tipo.FII):

@@ -1,10 +1,12 @@
+from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
 
 class CategoriaDespesa(models.Model):
-    nome = models.CharField(max_length=50, unique=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='categorias')
+    nome = models.CharField(max_length=50)
     cor = models.CharField(
         max_length=7,
         default='#6c757d',
@@ -18,6 +20,7 @@ class CategoriaDespesa(models.Model):
 
     class Meta:
         ordering = ['nome']
+        unique_together = ('usuario', 'nome')
         verbose_name = 'Categoria de despesa'
         verbose_name_plural = 'Categorias de despesa'
 
@@ -33,6 +36,7 @@ class DespesaRecorrente(models.Model):
     carregamento do dashboard (sem cron/Celery no projeto).
     """
 
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recorrentes')
     categoria = models.ForeignKey(CategoriaDespesa, on_delete=models.PROTECT, related_name='recorrentes')
     descricao = models.CharField(max_length=150)
     valor = models.DecimalField(max_digits=12, decimal_places=2)
@@ -53,6 +57,7 @@ class DespesaRecorrente(models.Model):
 
 
 class Despesa(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='despesas')
     categoria = models.ForeignKey(
         CategoriaDespesa, on_delete=models.PROTECT, related_name='despesas'
     )
@@ -80,6 +85,7 @@ class Receita(models.Model):
         RENDIMENTO = 'RENDIMENTO', 'Rendimento'
         OUTRO = 'OUTRO', 'Outro'
 
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='receitas')
     descricao = models.CharField(max_length=150)
     tipo = models.CharField(max_length=10, choices=Tipo.choices, default=Tipo.SALARIO)
     valor = models.DecimalField(max_digits=12, decimal_places=2)

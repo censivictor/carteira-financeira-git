@@ -22,16 +22,18 @@ class AtivoViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Ativo.objects.filter(ativo_flag=True)
+        return Ativo.objects.filter(usuario=self.request.user, ativo_flag=True)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
 
 
 class TransacaoAtivoViewSet(ModelViewSet):
     serializer_class = TransacaoAtivoSerializer
     permission_classes = [IsAuthenticated]
-    queryset = TransacaoAtivo.objects.all()
 
     def get_queryset(self):
-        qs = TransacaoAtivo.objects.all()
+        qs = TransacaoAtivo.objects.filter(ativo__usuario=self.request.user)
         ativo_id = self.request.query_params.get('ativo')
         if ativo_id:
             qs = qs.filter(ativo_id=ativo_id)
@@ -41,10 +43,9 @@ class TransacaoAtivoViewSet(ModelViewSet):
 class ProventoViewSet(ModelViewSet):
     serializer_class = ProventoSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Provento.objects.all()
 
     def get_queryset(self):
-        qs = Provento.objects.all()
+        qs = Provento.objects.filter(ativo__usuario=self.request.user)
         ativo_id = self.request.query_params.get('ativo')
         if ativo_id:
             qs = qs.filter(ativo_id=ativo_id)
@@ -56,7 +57,7 @@ class CotacoesAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        ativos = Ativo.objects.filter(ativo_flag=True)
+        ativos = Ativo.objects.filter(usuario=request.user, ativo_flag=True)
         tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
         cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
 

@@ -15,7 +15,12 @@ from .serializers import (
 class CategoriaDespesaViewSet(ModelViewSet):
     serializer_class = CategoriaDespesaSerializer
     permission_classes = [IsAuthenticated]
-    queryset = CategoriaDespesa.objects.all()
+
+    def get_queryset(self):
+        return CategoriaDespesa.objects.filter(usuario=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         # on_delete=PROTECT em Despesa/DespesaRecorrente — sem isso, o DRF
@@ -34,16 +39,31 @@ class CategoriaDespesaViewSet(ModelViewSet):
 class DespesaViewSet(ModelViewSet):
     serializer_class = DespesaSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Despesa.objects.all()
+
+    def get_queryset(self):
+        return Despesa.objects.filter(usuario=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
 
 
 class DespesaRecorrenteViewSet(ModelViewSet):
     serializer_class = DespesaRecorrenteSerializer
     permission_classes = [IsAuthenticated]
-    queryset = DespesaRecorrente.objects.all()
+
+    def get_queryset(self):
+        return DespesaRecorrente.objects.filter(usuario=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
 
 
 class ReceitaViewSet(ModelViewSet):
     serializer_class = ReceitaSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Receita.objects.all()
+
+    def get_queryset(self):
+        return Receita.objects.filter(usuario=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
