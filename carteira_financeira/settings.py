@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'rest_framework',
     'core',
     'investimentos',
     'financas',
@@ -163,3 +164,17 @@ COINGECKO_API_KEY = env('COINGECKO_API_KEY', default='').strip()
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+
+# API (consumida pelo front Vue em desenvolvimento — frontend/) — auth por
+# sessão Django (mesmo login de sempre), não JWT. O Vite dev server faz
+# proxy de /api pro Django, então cookie de sessão/CSRF funcionam sem
+# precisar de django-cors-headers.
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}

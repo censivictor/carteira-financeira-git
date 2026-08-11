@@ -36,8 +36,14 @@ def _variacao_pct(atual: Decimal, anterior: Decimal):
     return float((atual - anterior) / anterior * 100)
 
 
-@login_required
-def dashboard(request):
+def build_dashboard_data():
+    """Monta todo o dict de dados do dashboard — agregação de investimentos,
+    proventos, comparação com mercado, receitas/despesas, orçamento e
+    evolução mensal. Função pura (sem `request`), reaproveitada tanto pela
+    view Django (`dashboard`, renderiza template) quanto pela API DRF
+    (`core/api_views.py::DashboardAPIView`, devolve JSON) — assim os dois
+    front-ends (o antigo em templates e o novo em Vue) sempre mostram
+    exatamente os mesmos números, calculados uma única vez."""
     # --- Carteira de investimentos ---
     ativos = Ativo.objects.filter(ativo_flag=True)
     tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
@@ -233,7 +239,7 @@ def dashboard(request):
     evolucao_despesas = [float(despesas_por_mes.get(chave, 0)) for chave in meses]
     evolucao_saldo = [r - d for r, d in zip(evolucao_receitas, evolucao_despesas)]
 
-    context = {
+    return {
         'patrimonio_total': float(valor_atual_total),
         'valor_investido_total': float(valor_investido_total),
         'ganho_perda_total_pct': ganho_perda_total_pct,
@@ -263,4 +269,8 @@ def dashboard(request):
         'comparacao_labels': comparacao_labels,
         'comparacao_valores': comparacao_valores,
     }
-    return render(request, 'core/dashboard.html', context)
+
+
+@login_required
+def dashboard(request):
+    return render(request, 'core/dashboard.html', build_dashboard_data())
