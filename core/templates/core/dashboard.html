@@ -48,6 +48,27 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-6">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Proventos recebidos (mês)</div>
+                <div class="fs-4 fw-bold text-gain">R$ {{ proventos_mes|floatformat:2 }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-metric shadow-sm h-100">
+            <div class="card-body">
+                <div class="text-muted small">Retorno total (ganho de capital + proventos)</div>
+                <div class="fs-4 fw-bold {% if retorno_total_pct >= 0 %}text-gain{% else %}text-loss{% endif %}">
+                    {{ retorno_total_pct|floatformat:2 }}%
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
         <div class="card shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small">Receita deste mês</div>

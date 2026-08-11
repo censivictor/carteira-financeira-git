@@ -9,7 +9,7 @@ from django.utils import timezone
 from financas import services as financas_services
 from financas.models import CategoriaDespesa, Despesa, Receita
 from investimentos import services
-from investimentos.models import Ativo, PatrimonioSnapshot
+from investimentos.models import Ativo, PatrimonioSnapshot, Provento
 
 MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
@@ -105,6 +105,22 @@ def dashboard(request):
     # --- Renda e despesas do mês ---
     hoje = timezone.now().date()
 
+    # --- Proventos (dividendos/JCP/rendimentos) ---
+    # Poucos registros pra uso pessoal — soma em Python direto, sem agregação
+    # SQL, já que valor_total é uma property calculada (quantidade na data-com).
+    proventos_mes = Decimal('0')
+    proventos_total = Decimal('0')
+    for p in Provento.objects.select_related('ativo'):
+        valor = p.valor_total
+        proventos_total += valor
+        data_ref = p.data_pagamento or p.data_com
+        if data_ref.year == hoje.year and data_ref.month == hoje.month:
+            proventos_mes += valor
+    ganho_com_proventos = valor_atual_total - valor_investido_total + proventos_total
+    retorno_total_pct = (
+        float(ganho_com_proventos / valor_investido_total * 100) if valor_investido_total else 0
+    )
+
     # --- Snapshot diário de patrimônio (alimenta o gráfico histórico) ---
     # update_or_create por data: reabrir o dashboard no mesmo dia só
     # atualiza o snapshot de hoje, nunca duplica.
@@ -189,6 +205,9 @@ def dashboard(request):
         'patrimonio_total': float(valor_atual_total),
         'valor_investido_total': float(valor_investido_total),
         'ganho_perda_total_pct': ganho_perda_total_pct,
+        'proventos_mes': float(proventos_mes),
+        'proventos_total': float(proventos_total),
+        'retorno_total_pct': retorno_total_pct,
         'alocacao': alocacao,
         'receita_mes_atual': float(receita_mes_atual),
         'despesa_mes_atual': float(despesa_mes_atual),

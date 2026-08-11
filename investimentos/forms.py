@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django import forms
 
-from .models import Ativo, TransacaoAtivo
+from .models import Ativo, Provento, TransacaoAtivo
 
 
 class AtivoForm(forms.ModelForm):
@@ -105,3 +105,23 @@ class TransacaoAtivoForm(forms.ModelForm):
                     f'Você tem {qtd_atual} unidades — não é possível vender mais que isso.',
                 )
         return cleaned
+
+
+class ProventoForm(forms.ModelForm):
+    class Meta:
+        model = Provento
+        fields = ['tipo', 'valor_por_cota', 'data_com', 'data_pagamento', 'observacao']
+        labels = {
+            'tipo': 'Tipo',
+            'valor_por_cota': 'Valor por ação/cota (R$)',
+            'data_com': 'Data-base (data-com)',
+            'data_pagamento': 'Data de pagamento (opcional)',
+            'observacao': 'Observação (opcional)',
+        }
+        widgets = {
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
+            'valor_por_cota': forms.NumberInput(attrs={'class': 'form-control', 'step': 'any'}),
+            'data_com': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'data_pagamento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'observacao': forms.TextInput(attrs={'class': 'form-control'}),
+        }

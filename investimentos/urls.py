@@ -11,5 +11,7 @@ urlpatterns = [
     path('<int:pk>/excluir/', views.AtivoDeleteView.as_view(), name='ativo-delete'),
     path('<int:ativo_pk>/transacoes/nova/', views.TransacaoCreateView.as_view(), name='transacao-create'),
     path('transacoes/<int:pk>/excluir/', views.TransacaoDeleteView.as_view(), name='transacao-delete'),
+    path('<int:ativo_pk>/proventos/novo/', views.ProventoCreateView.as_view(), name='provento-create'),
+    path('proventos/<int:pk>/excluir/', views.ProventoDeleteView.as_view(), name='provento-delete'),
     path('<int:pk>/', views.AtivoDetailView.as_view(), name='ativo-detail'),
 ]

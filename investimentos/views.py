@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -5,8 +7,8 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from . import services
-from .forms import AtivoForm, TransacaoAtivoForm
-from .models import Ativo, TransacaoAtivo
+from .forms import AtivoForm, ProventoForm, TransacaoAtivoForm
+from .models import Ativo, Provento, TransacaoAtivo
 
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
 
@@ -54,6 +56,10 @@ class AtivoDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx['transacoes'] = self.object.transacoes.all()
+        if self.object.tipo in TIPOS_COTADOS_B3:
+            proventos = self.object.proventos.all()
+            ctx['proventos'] = proventos
+            ctx['proventos_total'] = sum((p.valor_total for p in proventos), Decimal('0'))
         return ctx
 
 
@@ -87,6 +93,38 @@ class TransacaoCreateView(LoginRequiredMixin, CreateView):
 class TransacaoDeleteView(LoginRequiredMixin, DeleteView):
     model = TransacaoAtivo
     template_name = 'investimentos/transacao_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('ativo-detail', args=[self.object.ativo.pk])
+
+
+class ProventoCreateView(LoginRequiredMixin, CreateView):
+    model = Provento
+    form_class = ProventoForm
+    template_name = 'investimentos/provento_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        # Proventos só fazem sentido pra Ação/FII — cripto e renda fixa não
+        # passam por aqui (404 em vez de deixar criar fora de contexto).
+        self.ativo = get_object_or_404(Ativo, pk=kwargs['ativo_pk'], tipo__in=TIPOS_COTADOS_B3)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['ativo'] = self.ativo
+        return ctx
+
+    def form_valid(self, form):
+        form.instance.ativo = self.ativo
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('ativo-detail', args=[self.ativo.pk])
+
+
+class ProventoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Provento
+    template_name = 'investimentos/provento_confirm_delete.html'
 
     def get_success_url(self):
         return reverse('ativo-detail', args=[self.object.ativo.pk])

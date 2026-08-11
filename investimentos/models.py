@@ -78,16 +78,18 @@ class Ativo(models.Model):
     def __str__(self):
         return f'{self.ticker} ({self.get_tipo_display()})'
 
-    @cached_property
-    def _posicao(self):
-        """(quantidade, preco_medio) calculados a partir do histórico de
-        transações, pelo método de custo médio ponderado: compra recalcula
-        o preço médio, venda reduz a quantidade sem alterar o preço médio
-        do que sobrou. `cached_property` evita recalcular mais de uma vez
-        por request."""
+    def _calcular_posicao(self, ate=None):
+        """(quantidade, preco_medio) a partir do histórico de transações até
+        a data `ate` (inclusive), pelo método de custo médio ponderado:
+        compra recalcula o preço médio, venda reduz a quantidade sem alterar
+        o preço médio do que sobrou. `ate=None` considera todas as
+        transações (posição atual)."""
         qtd = Decimal('0')
         custo_total = Decimal('0')
-        for t in self.transacoes.order_by('data', 'criado_em'):
+        qs = self.transacoes.order_by('data', 'criado_em')
+        if ate is not None:
+            qs = qs.filter(data__lte=ate)
+        for t in qs:
             if t.tipo == TransacaoAtivo.Tipo.COMPRA:
                 custo_total += t.quantidade * t.preco_unitario
                 qtd += t.quantidade
@@ -98,6 +100,17 @@ class Ativo(models.Model):
                 qtd -= t.quantidade
         preco_medio = (custo_total / qtd) if qtd > 0 else Decimal('0')
         return qtd, preco_medio
+
+    @cached_property
+    def _posicao(self):
+        """Posição atual (todas as transações). `cached_property` evita
+        recalcular mais de uma vez por request."""
+        return self._calcular_posicao()
+
+    def quantidade_em(self, data) -> Decimal:
+        """Quantidade que o usuário tinha numa data específica — usado pra
+        calcular o valor recebido em proventos (data-base)."""
+        return self._calcular_posicao(ate=data)[0]
 
     @property
     def quantidade(self):
@@ -150,6 +163,51 @@ class TransacaoAtivo(models.Model):
     @property
     def valor_total(self) -> Decimal:
         return self.quantidade * self.preco_unitario
+
+
+class Provento(models.Model):
+    """Um dividendo, JCP ou rendimento (FII) recebido por um ativo.
+
+    O valor total recebido é calculado a partir da quantidade que o usuário
+    tinha na data-com (`ativo.quantidade_em`), reaproveitando o ledger de
+    transações — não precisa digitar o valor total na mão. Só faz sentido
+    pra Ação/FII (cripto e renda fixa não passam por aqui).
+    """
+
+    class Tipo(models.TextChoices):
+        DIVIDENDO = 'DIVIDENDO', 'Dividendo'
+        JCP = 'JCP', 'Juros sobre Capital Próprio'
+        RENDIMENTO = 'RENDIMENTO', 'Rendimento (FII)'
+
+    ativo = models.ForeignKey(Ativo, on_delete=models.CASCADE, related_name='proventos')
+    tipo = models.CharField(max_length=10, choices=Tipo.choices)
+    valor_por_cota = models.DecimalField(
+        max_digits=10, decimal_places=6, help_text='Valor pago por ação/cota, em BRL.'
+    )
+    data_com = models.DateField(
+        help_text='Data-base — a quantidade que você tinha nesse dia é usada pra calcular o valor recebido.'
+    )
+    data_pagamento = models.DateField(
+        blank=True, null=True, help_text='Data em que o valor efetivamente caiu na conta (opcional).'
+    )
+    observacao = models.CharField(max_length=200, blank=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-data_com']
+        verbose_name = 'Provento'
+        verbose_name_plural = 'Proventos'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()} {self.ativo.ticker} - R$ {self.valor_total}'
+
+    @property
+    def quantidade_na_data(self) -> Decimal:
+        return self.ativo.quantidade_em(self.data_com)
+
+    @property
+    def valor_total(self) -> Decimal:
+        return self.quantidade_na_data * self.valor_por_cota
 
 
 class PatrimonioSnapshot(models.Model):
