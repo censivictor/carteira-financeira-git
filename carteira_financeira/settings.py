@@ -24,6 +24,16 @@ DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# Origem do Vite dev server (frontend/) — Django 4+ valida o header Origin
+# em requisições que mudam estado mesmo em HTTP puro, e o proxy do Vite não
+# reescreve esse header (ele só troca o destino da requisição). Só entra em
+# DEBUG (dev local); em produção o Vue já vem buildado e servido pelo
+# próprio Django, mesma origem, sem precisar disso.
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=['http://localhost:5173', 'http://127.0.0.1:5173'] if DEBUG else [],
+)
+
 
 # Application definition
 

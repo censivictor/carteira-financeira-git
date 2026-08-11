@@ -8,6 +8,8 @@ de form POST tradicional.
 """
 
 from django.contrib.auth import authenticate, login, logout
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,8 +45,15 @@ class LogoutAPIView(APIView):
         return Response(status=204)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class MeAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    """Devolve o usuário logado (ou 401/403). O front chama isso no boot do
+    app pra saber se já tem sessão válida — e é essa chamada que garante o
+    cookie `csrftoken` no navegador antes de qualquer POST (login inclusive),
+    já que nenhuma view de API renderiza template com {% csrf_token %}."""
+    permission_classes = [AllowAny]
 
     def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({'detail': 'Não autenticado.'}, status=401)
         return Response({'username': request.user.username})
