@@ -154,6 +154,10 @@ COTACAO_CACHE_TTL = env.int('COTACAO_CACHE_TTL', default=60)
 # liberar publicamente.
 BRAPI_TOKEN = env('BRAPI_TOKEN', default='').strip()
 
+# Chave opcional da CoinGecko (plano Demo gratuito) — aumenta o limite de
+# requisições por minuto nas buscas/cotações de cripto.
+COINGECKO_API_KEY = env('COINGECKO_API_KEY', default='').strip()
+
 
 # Autenticação — app hospedado publicamente, login é obrigatório em tudo.
 LOGIN_URL = 'login'

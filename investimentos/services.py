@@ -74,10 +74,20 @@ def get_cotacoes_acoes(tickers: list[str]) -> dict:
         return cache.get(chave_stale) or {}
 
 
+def _coingecko_headers() -> dict:
+    """Header de autenticação da CoinGecko (plano Demo gratuito). Sem chave
+    configurada, a API ainda funciona — só com limite de requisições menor."""
+    if settings.COINGECKO_API_KEY:
+        return {'x-cg-demo-api-key': settings.COINGECKO_API_KEY}
+    return {}
+
+
 def get_cotacoes_cripto(coingecko_ids: list[str], vs: str = 'brl') -> dict:
     """Retorna {coingecko_id: {'preco': float|None, 'variacao_dia_pct': float|None}}.
 
-    Fonte: CoinGecko, endpoint público sem chave, praticamente tempo real.
+    Fonte: CoinGecko, praticamente tempo real. Funciona sem chave; com
+    settings.COINGECKO_API_KEY (plano Demo gratuito) ganha limite de
+    requisições maior.
     """
     if not coingecko_ids:
         return {}
@@ -97,6 +107,7 @@ def get_cotacoes_cripto(coingecko_ids: list[str], vs: str = 'brl') -> dict:
                 'vs_currencies': vs,
                 'include_24hr_change': 'true',
             },
+            headers=_coingecko_headers(),
             timeout=TIMEOUT,
         )
         resp.raise_for_status()
@@ -173,7 +184,10 @@ def buscar_cripto(query: str) -> list:
 
     try:
         resp = requests.get(
-            'https://api.coingecko.com/api/v3/search', params={'query': query}, timeout=TIMEOUT
+            'https://api.coingecko.com/api/v3/search',
+            params={'query': query},
+            headers=_coingecko_headers(),
+            timeout=TIMEOUT,
         )
         resp.raise_for_status()
         data = resp.json()
