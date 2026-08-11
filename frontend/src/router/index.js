@@ -13,6 +13,26 @@ const routes = [
     name: 'dashboard',
     component: () => import('@/views/DashboardView.vue'),
   },
+  {
+    path: '/investimentos',
+    name: 'ativo-list',
+    component: () => import('@/views/investimentos/AtivoListView.vue'),
+  },
+  {
+    path: '/investimentos/novo',
+    name: 'ativo-create',
+    component: () => import('@/views/investimentos/AtivoFormView.vue'),
+  },
+  {
+    path: '/investimentos/:id/editar',
+    name: 'ativo-update',
+    component: () => import('@/views/investimentos/AtivoFormView.vue'),
+  },
+  {
+    path: '/investimentos/:id',
+    name: 'ativo-detail',
+    component: () => import('@/views/investimentos/AtivoDetailView.vue'),
+  },
 ]
 
 const router = createRouter({

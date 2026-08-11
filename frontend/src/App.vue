@@ -19,9 +19,15 @@ const auth = useAuthStore()
 
 const mostrarLayout = computed(() => !route.meta.publica)
 
+function itemAtivo(item) {
+  if (!item.disponivel) return false
+  if (item.to === '/') return route.path === '/'
+  return route.path.startsWith(item.to)
+}
+
 const navItems = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard, disponivel: true },
-  { label: 'Investimentos', to: '#', icon: Wallet, disponivel: false },
+  { label: 'Investimentos', to: '/investimentos', icon: Wallet, disponivel: true },
   { label: 'Despesas', to: '#', icon: ArrowDownCircle, disponivel: false },
   { label: 'Receitas', to: '#', icon: ArrowUpCircle, disponivel: false },
   { label: 'Categorias', to: '#', icon: Tags, disponivel: false },
@@ -54,7 +60,7 @@ async function sair() {
             item.disponivel
               ? 'text-stone-600 hover:bg-peach/20 hover:text-wine'
               : 'cursor-not-allowed text-stone-300',
-            route.path === item.to && item.disponivel ? 'bg-wine/10 text-wine' : '',
+            itemAtivo(item) ? 'bg-wine/10 text-wine' : '',
           ]"
         >
           <component :is="item.icon" :size="18" />
