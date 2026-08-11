@@ -73,6 +73,32 @@ function montarChartEvolucao() {
     });
 }
 
+function montarChartComparacao() {
+    const canvas = document.getElementById('chart-comparacao');
+    if (!canvas) return;
+
+    const valores = lerDadosJson('comparacao-valores');
+    const cores = ['#198754', '#0d6efd', '#fd7e14'];
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: lerDadosJson('comparacao-labels'),
+            datasets: [{
+                data: valores,
+                backgroundColor: cores,
+            }],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: { x: { ticks: { callback: (v) => v + '%' } } },
+        },
+    });
+}
+
 function montarChartPatrimonio() {
     const canvas = document.getElementById('chart-patrimonio');
     if (!canvas) return;
@@ -148,5 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
     montarChartGastos();
     montarChartEvolucao();
     montarChartPatrimonio();
+    montarChartComparacao();
     setInterval(atualizarCotacoes, 60000);
 });

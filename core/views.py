@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Min, Sum
 from django.db.models.functions import TruncMonth
 from django.shortcuts import render
 from django.utils import timezone
@@ -9,7 +9,7 @@ from django.utils import timezone
 from financas import services as financas_services
 from financas.models import CategoriaDespesa, Despesa, Receita
 from investimentos import services
-from investimentos.models import Ativo, PatrimonioSnapshot, Provento
+from investimentos.models import Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
 
 MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
@@ -49,6 +49,11 @@ def dashboard(request):
     alocacao = []
     valor_investido_total = Decimal('0')
     valor_atual_total = Decimal('0')
+    # Subtotal só de Ação/FII/Cripto (exclui Renda Fixa) — usado na
+    # comparação com CDI/Ibovespa mais abaixo, já que Renda Fixa não é
+    # "risco de mercado" e comparar de novo contra CDI seria redundante.
+    valor_investido_mercado = Decimal('0')
+    valor_atual_mercado = Decimal('0')
 
     for ativo in ativos:
         # Ação/FII/Cripto sem nenhuma transação lançada ainda (posição
@@ -88,6 +93,9 @@ def dashboard(request):
 
         valor_atual_total += valor_atual
         valor_investido_total += valor_investido
+        if ativo.tipo != Ativo.Tipo.RENDA_FIXA:
+            valor_atual_mercado += valor_atual
+            valor_investido_mercado += valor_investido
 
         alocacao.append({
             'ticker': ativo.ticker,
@@ -120,6 +128,30 @@ def dashboard(request):
     retorno_total_pct = (
         float(ganho_com_proventos / valor_investido_total * 100) if valor_investido_total else 0
     )
+
+    # --- Comparação com CDI/Ibovespa ---
+    # Desde a 1ª transação de Ação/FII/Cripto (Renda Fixa fica de fora, já é
+    # resolvida contra CDI/Selic internamente). Sem transação nenhuma, a
+    # seção simplesmente não aparece (data_inicio_investimentos = None).
+    data_inicio_investimentos = TransacaoAtivo.objects.filter(
+        ativo__ativo_flag=True
+    ).aggregate(m=Min('data'))['m']
+
+    retorno_mercado_pct = None
+    variacao_cdi_pct = None
+    comparacao_ibovespa = None
+    if data_inicio_investimentos:
+        ganho_mercado = valor_atual_mercado - valor_investido_mercado + proventos_total
+        retorno_mercado_pct = (
+            float(ganho_mercado / valor_investido_mercado * 100) if valor_investido_mercado else None
+        )
+        variacao_cdi = services.get_variacao_cdi(data_inicio_investimentos)
+        variacao_cdi_pct = float(variacao_cdi) if variacao_cdi is not None else None
+        comparacao_ibovespa = services.get_variacao_ibovespa(data_inicio_investimentos)
+
+    variacao_ibovespa_pct = comparacao_ibovespa['variacao_pct'] if comparacao_ibovespa else None
+    comparacao_labels = ['Sua carteira', 'CDI', 'Ibovespa']
+    comparacao_valores = [retorno_mercado_pct, variacao_cdi_pct, variacao_ibovespa_pct]
 
     # --- Snapshot diário de patrimônio (alimenta o gráfico histórico) ---
     # update_or_create por data: reabrir o dashboard no mesmo dia só
@@ -224,5 +256,11 @@ def dashboard(request):
         'tem_ativos': bool(alocacao),
         'patrimonio_historico_labels': patrimonio_historico_labels,
         'patrimonio_historico_valores': patrimonio_historico_valores,
+        'data_inicio_investimentos': data_inicio_investimentos,
+        'retorno_mercado_pct': retorno_mercado_pct,
+        'variacao_cdi_pct': variacao_cdi_pct,
+        'comparacao_ibovespa': comparacao_ibovespa,
+        'comparacao_labels': comparacao_labels,
+        'comparacao_valores': comparacao_valores,
     }
     return render(request, 'core/dashboard.html', context)

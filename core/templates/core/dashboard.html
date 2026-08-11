@@ -152,6 +152,41 @@
 </div>
 {% endif %}
 
+{% if data_inicio_investimentos %}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Comparação com o mercado</h6>
+                <div class="text-muted small mb-2">Desde {{ data_inicio_investimentos|date:"d/m/Y" }} (1ª transação de Ação/FII/Cripto)</div>
+                <div class="chart-wrapper" style="height: 220px;"><canvas id="chart-comparacao"></canvas></div>
+                <ul class="list-unstyled small mt-2 mb-0">
+                    <li>
+                        <strong>Sua carteira (Ação/FII/Cripto):</strong>
+                        {% if retorno_mercado_pct is not None %}{{ retorno_mercado_pct|floatformat:2 }}%{% else %}—{% endif %}
+                    </li>
+                    <li>
+                        <strong>CDI:</strong>
+                        {% if variacao_cdi_pct is not None %}{{ variacao_cdi_pct|floatformat:2 }}%{% else %}indisponível no momento{% endif %}
+                    </li>
+                    <li>
+                        <strong>Ibovespa:</strong>
+                        {% if comparacao_ibovespa %}
+                            {{ comparacao_ibovespa.variacao_pct|floatformat:2 }}%
+                            {% if comparacao_ibovespa.periodo_limitado %}
+                                <span class="text-muted">(desde {{ comparacao_ibovespa.data_inicio_real|date:"d/m/Y" }} — limite do plano gratuito da API, máximo 3 meses)</span>
+                            {% endif %}
+                        {% else %}
+                            indisponível no momento
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card shadow-sm">
@@ -229,6 +264,8 @@
 {{ evolucao_saldo|json_script:"evolucao-saldo" }}
 {{ patrimonio_historico_labels|json_script:"patrimonio-labels" }}
 {{ patrimonio_historico_valores|json_script:"patrimonio-valores" }}
+{{ comparacao_labels|json_script:"comparacao-labels" }}
+{{ comparacao_valores|json_script:"comparacao-valores" }}
 {% endblock %}
 
 {% block extra_js %}

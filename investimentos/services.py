@@ -274,3 +274,61 @@ def calcular_valor_atual_renda_fixa(ativo) -> Decimal | None:
         return ativo.valor_aplicado * Decimal(str(fator))
 
     return None
+
+
+def get_variacao_cdi(data_inicial: date) -> Decimal | None:
+    """Variação acumulada do CDI (100%, benchmark puro) entre data_inicial e
+    hoje. Reaproveita get_serie_bcb (já cacheada), sem limite de período —
+    o Banco Central não tem a restrição de plano que a brapi.dev tem."""
+    serie = get_serie_bcb(12, data_inicial)
+    if not serie:
+        return None
+    hoje = date.today()
+    fator = 1.0
+    for dia, taxa in serie.items():
+        if data_inicial < dia <= hoje:
+            fator *= 1 + float(taxa) / 100
+    return Decimal(str((fator - 1) * 100))
+
+
+def get_variacao_ibovespa(data_inicial: date) -> dict | None:
+    """Variação do Ibovespa entre a data real usada e hoje.
+
+    O plano gratuito da brapi.dev só libera `range` até '3mo' (testado e
+    confirmado — 'range=2y' é rejeitado) — se `data_inicial` for mais antiga
+    que isso, a função usa os 3 meses disponíveis mesmo assim e retorna
+    `periodo_limitado=True` + `data_inicio_real` pra quem chama avisar o
+    usuário, em vez de fingir que comparou o período todo.
+    """
+    chave = f"ibovespa-variacao:{data_inicial.isoformat()}"
+    chave_stale = chave + ':stale'
+
+    cached = cache.get(chave)
+    if cached is not None:
+        return cached
+
+    try:
+        params = {'range': '3mo', 'interval': '1d'}
+        if settings.BRAPI_TOKEN:
+            params['token'] = settings.BRAPI_TOKEN
+        resp = requests.get('https://brapi.dev/api/quote/%5EBVSP', params=params, timeout=TIMEOUT)
+        resp.raise_for_status()
+        data = resp.json()['results'][0]
+        preco_atual = data['regularMarketPrice']
+        hist = data.get('historicalDataPrice', [])
+        if not hist or preco_atual is None:
+            return cache.get(chave_stale)
+
+        preco_inicial = hist[0]['close']
+        data_inicio_real = datetime.fromtimestamp(hist[0]['date']).date()
+        resultado = {
+            'variacao_pct': (preco_atual - preco_inicial) / preco_inicial * 100,
+            'data_inicio_real': data_inicio_real,
+            'periodo_limitado': data_inicio_real > data_inicial,
+        }
+        cache.set(chave, resultado, timeout=6 * 60 * 60)
+        cache.set(chave_stale, resultado, timeout=STALE_TTL)
+        return resultado
+    except (requests.RequestException, ValueError, KeyError, IndexError) as exc:
+        logger.warning('Falha ao buscar variação do Ibovespa (desde %s): %s', data_inicial, exc)
+        return cache.get(chave_stale)
