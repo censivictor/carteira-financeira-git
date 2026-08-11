@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Despesas recorrentes - Carteira Financeira{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Despesas recorrentes</h2>
+    <a href="{% url 'recorrente-create' %}" class="btn btn-primary">+ Nova recorrência</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th class="text-end">Valor</th>
+                    <th class="text-end">Dia do mês</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for r in recorrentes %}
+                <tr>
+                    <td>{{ r.descricao }}</td>
+                    <td><span class="badge" style="background-color: {{ r.categoria.cor }}">{{ r.categoria.nome }}</span></td>
+                    <td class="text-end">R$ {{ r.valor|floatformat:2 }}</td>
+                    <td class="text-end">{{ r.dia_do_mes }}</td>
+                    <td>
+                        {% if r.ativa %}<span class="badge bg-success">Ativa</span>{% else %}<span class="badge bg-secondary">Pausada</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'recorrente-update' r.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        <a href="{% url 'recorrente-delete' r.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6" class="text-muted text-center py-4">Nenhuma despesa recorrente cadastrada ainda.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

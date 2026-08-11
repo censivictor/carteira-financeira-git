@@ -6,7 +6,8 @@ from django.db.models.functions import TruncMonth
 from django.shortcuts import render
 from django.utils import timezone
 
-from financas.models import Despesa, Receita
+from financas import services as financas_services
+from financas.models import CategoriaDespesa, Despesa, Receita
 from investimentos import services
 from investimentos.models import Ativo, PatrimonioSnapshot
 
@@ -118,6 +119,10 @@ def dashboard(request):
     patrimonio_historico_labels = [s.data.strftime('%d/%m/%y') for s in snapshots]
     patrimonio_historico_valores = [float(s.valor_total) for s in snapshots]
 
+    # --- Despesas recorrentes do mês (aluguel, assinaturas...) ---
+    # Idempotente: se já existe a despesa gerada desse mês, não duplica.
+    financas_services.gerar_despesas_recorrentes_do_mes(referencia=hoje)
+
     ano_atual, mes_atual = hoje.year, hoje.month
     ano_anterior, mes_anterior = _meses_recentes(2, referencia=hoje.replace(day=1))[0]
 
@@ -141,6 +146,27 @@ def dashboard(request):
         .annotate(total=Sum('valor'))
         .order_by('-total')
     )
+
+    # --- Orçamento por categoria (mês atual) ---
+    # Mostra TODA categoria com orçamento definido, mesmo sem gasto ainda
+    # esse mês (0%) — não só as que já têm despesa lançada.
+    totais_por_categoria = {
+        g['categoria__nome']: g['total']
+        for g in Despesa.objects.filter(data__year=ano_atual, data__month=mes_atual)
+        .values('categoria__nome')
+        .annotate(total=Sum('valor'))
+    }
+    orcamentos = []
+    for cat in CategoriaDespesa.objects.filter(orcamento_mensal__isnull=False):
+        total = totais_por_categoria.get(cat.nome, Decimal('0'))
+        orcamentos.append({
+            'categoria': cat.nome,
+            'cor': cat.cor,
+            'total': float(total),
+            'orcamento': float(cat.orcamento_mensal),
+            'pct': float(total / cat.orcamento_mensal * 100) if cat.orcamento_mensal else 0,
+        })
+    orcamentos.sort(key=lambda o: o['pct'], reverse=True)
 
     # --- Evolução mensal (últimos 12 meses) ---
     meses = _meses_recentes(12, referencia=hoje.replace(day=1))
@@ -171,6 +197,7 @@ def dashboard(request):
         'variacao_despesa_pct': variacao_despesa_pct,
         'pct_gasto_da_renda': pct_gasto_da_renda,
         'gastos_por_categoria': gastos_por_categoria,
+        'orcamentos': orcamentos,
         'evolucao_labels': evolucao_labels,
         'evolucao_receitas': evolucao_receitas,
         'evolucao_despesas': evolucao_despesas,

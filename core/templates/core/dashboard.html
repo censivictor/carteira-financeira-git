@@ -106,6 +106,31 @@
     </div>
 </div>
 
+{% if orcamentos %}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Orçamento por categoria (mês atual)</h6>
+                {% for o in orcamentos %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <span>{{ o.categoria }}</span>
+                            <span>R$ {{ o.total|floatformat:2 }} de R$ {{ o.orcamento|floatformat:2 }} ({{ o.pct|floatformat:0 }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if o.pct >= 100 %}bg-danger{% elif o.pct >= 80 %}bg-warning{% else %}bg-success{% endif %}"
+                                 role="progressbar" style="width: {{ o.pct|floatformat:0 }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <a href="{% url 'categoria-list' %}" class="small">Gerenciar categorias e orçamentos</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card shadow-sm">
