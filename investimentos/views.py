@@ -1,11 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
-from django.urls import reverse_lazy
-from django.views.generic import CreateView, DeleteView, ListView, UpdateView
+from django.shortcuts import get_object_or_404
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from . import services
-from .forms import AtivoForm
-from .models import Ativo
+from .forms import AtivoForm, TransacaoAtivoForm
+from .models import Ativo, TransacaoAtivo
 
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
 
@@ -23,7 +24,13 @@ class AtivoCreateView(LoginRequiredMixin, CreateView):
     model = Ativo
     form_class = AtivoForm
     template_name = 'investimentos/ativo_form.html'
-    success_url = reverse_lazy('ativo-list')
+
+    def get_success_url(self):
+        # Renda fixa já fica completa ao salvar. Ação/FII/Cripto começam sem
+        # posição — manda pro detalhe pra já convidar a lançar a 1ª compra.
+        if self.object.tipo == Ativo.Tipo.RENDA_FIXA:
+            return reverse('ativo-list')
+        return reverse('ativo-detail', args=[self.object.pk])
 
 
 class AtivoUpdateView(LoginRequiredMixin, UpdateView):
@@ -37,6 +44,52 @@ class AtivoDeleteView(LoginRequiredMixin, DeleteView):
     model = Ativo
     template_name = 'investimentos/ativo_confirm_delete.html'
     success_url = reverse_lazy('ativo-list')
+
+
+class AtivoDetailView(LoginRequiredMixin, DetailView):
+    model = Ativo
+    template_name = 'investimentos/ativo_detail.html'
+    context_object_name = 'ativo'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['transacoes'] = self.object.transacoes.all()
+        return ctx
+
+
+class TransacaoCreateView(LoginRequiredMixin, CreateView):
+    model = TransacaoAtivo
+    form_class = TransacaoAtivoForm
+    template_name = 'investimentos/transacao_form.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        self.ativo = get_object_or_404(Ativo, pk=kwargs['ativo_pk'])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['ativo'] = self.ativo
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['ativo'] = self.ativo
+        return ctx
+
+    def form_valid(self, form):
+        form.instance.ativo = self.ativo
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('ativo-detail', args=[self.ativo.pk])
+
+
+class TransacaoDeleteView(LoginRequiredMixin, DeleteView):
+    model = TransacaoAtivo
+    template_name = 'investimentos/transacao_confirm_delete.html'
+
+    def get_success_url(self):
+        return reverse('ativo-detail', args=[self.object.ativo.pk])
 
 
 def cotacoes_json(request):

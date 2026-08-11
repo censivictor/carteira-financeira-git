@@ -23,7 +23,13 @@
             <tbody>
             {% for ativo in ativos %}
                 <tr>
-                    <td>{{ ativo.ticker }}</td>
+                    <td>
+                        {% if ativo.tipo == 'RENDA_FIXA' %}
+                            {{ ativo.ticker }}
+                        {% else %}
+                            <a href="{% url 'ativo-detail' ativo.pk %}">{{ ativo.ticker }}</a>
+                        {% endif %}
+                    </td>
                     <td>{{ ativo.nome|default:"—" }}</td>
                     <td>{{ ativo.get_tipo_display }}</td>
                     {% if ativo.tipo == 'RENDA_FIXA' %}
@@ -35,6 +41,9 @@
                     {% endif %}
                     <td class="text-end">R$ {{ ativo.valor_investido|floatformat:2 }}</td>
                     <td class="text-end">
+                        {% if ativo.tipo != 'RENDA_FIXA' %}
+                            <a href="{% url 'ativo-detail' ativo.pk %}" class="btn btn-sm btn-outline-primary">Transações</a>
+                        {% endif %}
                         <a href="{% url 'ativo-update' ativo.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
                         <a href="{% url 'ativo-delete' ativo.pk %}" class="btn btn-sm btn-outline-danger">Excluir</a>
                     </td>

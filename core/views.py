@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from financas.models import Despesa, Receita
 from investimentos import services
-from investimentos.models import Ativo
+from investimentos.models import Ativo, PatrimonioSnapshot
 
 MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
@@ -50,6 +50,12 @@ def dashboard(request):
     valor_atual_total = Decimal('0')
 
     for ativo in ativos:
+        # Ação/FII/Cripto sem nenhuma transação lançada ainda (posição
+        # zerada) não fazem sentido na pizza/tabela do dashboard — mas
+        # continuam normalmente em /investimentos/ pra lançar a 1ª compra.
+        if ativo.tipo != Ativo.Tipo.RENDA_FIXA and not ativo.quantidade:
+            continue
+
         valor_investido = ativo.valor_investido
 
         if ativo.tipo in TIPOS_COTADOS_B3:
@@ -97,6 +103,21 @@ def dashboard(request):
 
     # --- Renda e despesas do mês ---
     hoje = timezone.now().date()
+
+    # --- Snapshot diário de patrimônio (alimenta o gráfico histórico) ---
+    # update_or_create por data: reabrir o dashboard no mesmo dia só
+    # atualiza o snapshot de hoje, nunca duplica.
+    PatrimonioSnapshot.objects.update_or_create(
+        data=hoje,
+        defaults={
+            'valor_total': valor_atual_total,
+            'valor_investido_total': valor_investido_total,
+        },
+    )
+    snapshots = PatrimonioSnapshot.objects.order_by('data')
+    patrimonio_historico_labels = [s.data.strftime('%d/%m/%y') for s in snapshots]
+    patrimonio_historico_valores = [float(s.valor_total) for s in snapshots]
+
     ano_atual, mes_atual = hoje.year, hoje.month
     ano_anterior, mes_anterior = _meses_recentes(2, referencia=hoje.replace(day=1))[0]
 
@@ -155,5 +176,7 @@ def dashboard(request):
         'evolucao_despesas': evolucao_despesas,
         'evolucao_saldo': evolucao_saldo,
         'tem_ativos': bool(alocacao),
+        'patrimonio_historico_labels': patrimonio_historico_labels,
+        'patrimonio_historico_valores': patrimonio_historico_valores,
     }
     return render(request, 'core/dashboard.html', context)

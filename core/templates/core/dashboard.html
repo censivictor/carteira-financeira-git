@@ -117,6 +117,21 @@
     </div>
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="card-title">Patrimônio ao longo do tempo</h6>
+                {% if patrimonio_historico_labels|length > 1 %}
+                    <div class="chart-wrapper"><canvas id="chart-patrimonio"></canvas></div>
+                {% else %}
+                    <p class="text-muted mb-0">Histórico começa a partir de agora — volte aqui em outro dia pra ver a evolução.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row g-3">
     <div class="col-12">
         <div class="card shadow-sm">
@@ -166,6 +181,8 @@
 {{ evolucao_receitas|json_script:"evolucao-receitas" }}
 {{ evolucao_despesas|json_script:"evolucao-despesas" }}
 {{ evolucao_saldo|json_script:"evolucao-saldo" }}
+{{ patrimonio_historico_labels|json_script:"patrimonio-labels" }}
+{{ patrimonio_historico_valores|json_script:"patrimonio-valores" }}
 {% endblock %}
 
 {% block extra_js %}

@@ -40,13 +40,6 @@
                         {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
                     </div>
 
-                {% elif field.name == 'quantidade' or field.name == 'preco_medio_compra' %}
-                    <div class="mb-3" data-tipo-show="ACAO,FII,CRIPTO">
-                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                    </div>
-
                 {% elif field.name == 'indexador' or field.name == 'taxa_contratada' or field.name == 'valor_aplicado' or field.name == 'data_aplicacao' %}
                     <div class="mb-3" data-tipo-show="RENDA_FIXA">
                         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -63,6 +56,11 @@
                     </div>
                 {% endif %}
             {% endfor %}
+
+            <div class="alert alert-info" data-tipo-show="ACAO,FII,CRIPTO">
+                Quantidade e preço médio são calculados automaticamente a partir das
+                transações de compra/venda que você lança depois de salvar.
+            </div>
 
             <button type="submit" class="btn btn-primary">Salvar</button>
             <a href="{% url 'ativo-list' %}" class="btn btn-outline-secondary">Cancelar</a>

@@ -73,6 +73,27 @@ function montarChartEvolucao() {
     });
 }
 
+function montarChartPatrimonio() {
+    const canvas = document.getElementById('chart-patrimonio');
+    if (!canvas) return;
+
+    new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: lerDadosJson('patrimonio-labels'),
+            datasets: [{
+                label: 'Patrimônio',
+                data: lerDadosJson('patrimonio-valores'),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13,110,253,0.15)',
+                fill: true,
+                tension: 0.3,
+            }],
+        },
+        options: { responsive: true, maintainAspectRatio: false },
+    });
+}
+
 function formatarMoeda(valor) {
     return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -126,5 +147,6 @@ document.addEventListener('DOMContentLoaded', () => {
     montarChartAlocacao();
     montarChartGastos();
     montarChartEvolucao();
+    montarChartPatrimonio();
     setInterval(atualizarCotacoes, 60000);
 });

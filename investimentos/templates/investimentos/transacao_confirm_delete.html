@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Excluir transação - Carteira Financeira{% endblock %}
+{% block content %}
+<h2 class="mb-4">Excluir transação</h2>
+<div class="card shadow-sm">
+    <div class="card-body">
+        <p>Tem certeza que quer excluir <strong>{{ object }}</strong>? Isso recalcula a quantidade e o preço médio do ativo.</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Excluir</button>
+            <a href="{% url 'ativo-detail' object.ativo.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
