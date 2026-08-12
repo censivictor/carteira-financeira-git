@@ -170,6 +170,18 @@ BRAPI_TOKEN = env('BRAPI_TOKEN', default='').strip()
 COINGECKO_API_KEY = env('COINGECKO_API_KEY', default='').strip()
 
 
+# Render (como a maioria dos PaaS) termina TLS na borda e repassa a
+# requisição pro Gunicorn em HTTP puro, sinalizando o protocolo original no
+# header X-Forwarded-Proto — sem isso, o Django acha que a conexão não é
+# segura: SECURE_SSL_REDIRECT vira loop de redirect e os cookies "Secure"
+# nunca voltam no browser.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+
 # API (consumida pelo front Vue em desenvolvimento — frontend/) — auth por
 # sessão Django (mesmo login de sempre), não JWT. O Vite dev server faz
 # proxy de /api pro Django, então cookie de sessão/CSRF funcionam sem

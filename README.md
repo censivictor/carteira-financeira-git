@@ -6,13 +6,20 @@ e gráficos de alocação/evolução mensal.
 
 ## Stack
 
-- Django 4.2 (server-rendered, sem SPA/Node) + Chart.js via CDN
+- Backend: Django 4.2 + Django REST Framework (API pura, sem templates) —
+  auth por sessão/cookie, não JWT
+- Frontend: Vue 3 + Vite (`frontend/`), SPA separada que consome a API
 - SQLite em desenvolvimento, Postgres em produção (via `DATABASE_URL`)
 - Cotações: [brapi.dev](https://brapi.dev) (ações B3) e [CoinGecko](https://www.coingecko.com) (cripto), com cache de 60s
 
 ## Rodando localmente
 
+Precisa de dois processos rodando ao mesmo tempo: a API Django e o dev
+server do Vite (que faz proxy de `/api` pro Django — ver
+`frontend/vite.config.js`).
+
 ```bash
+# terminal 1 — backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -23,9 +30,15 @@ python -c "from django.core.management.utils import get_random_secret_key; print
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
+
+# terminal 2 — frontend
+cd frontend
+npm install
+npm run dev
 ```
 
-Acesse `http://127.0.0.1:8000/` e faça login com o superusuário criado.
+Acesse `http://localhost:5173/` (o front) e faça login com o superusuário
+criado. O admin do Django continua em `http://127.0.0.1:8000/admin/`.
 
 Antes de lançar despesas, cadastre categorias em `/admin/financas/categoriadespesa/`
 (já vem com algumas padrão: Alimentação, Moradia, Transporte, Saúde, Lazer,
@@ -44,24 +57,49 @@ use o slug da moeda na CoinGecko (ex: `bitcoin`, `ethereum`), não o ticker.
 Se a API externa cair, o dashboard usa o último valor em cache (até 24h) em
 vez de quebrar — nunca acontece erro 500 por causa disso.
 
-## Deploy
+## Deploy (100% grátis)
 
-Recomendação: [Render](https://render.com) (free web service + Postgres free
-por 90 dias) pra começar. Alternativa sem "sleep": Railway (~US$5/mês).
+Desde a migração pro Vue (`frontend/`), o front e o back são deployados
+separados:
 
-Passos gerais (Render):
-1. Suba este repositório pro GitHub.
-2. No Render, crie um **Web Service** apontando pro repo — ele detecta o
-   `Procfile` automaticamente (build: `pip install -r requirements.txt`).
-3. Crie um banco **Postgres** no Render e copie a `DATABASE_URL` gerada.
-4. Nas env vars do Web Service, configure: `SECRET_KEY` (gere uma nova, não
-   reuse a de dev), `DEBUG=False`, `ALLOWED_HOSTS=<seu-app>.onrender.com`,
-   `DATABASE_URL=<a do passo 3>`, `BRAPI_TOKEN` (opcional).
-5. Deploy. O `release: python manage.py migrate` do `Procfile` roda as
-   migrations automaticamente a cada deploy.
-6. Crie o superusuário em produção via shell do Render:
-   `python manage.py createsuperuser`.
+| Peça | Onde | Grátis? |
+|---|---|---|
+| Front (`frontend/`, Vite build estático) | [Vercel](https://vercel.com) | sim, sem prazo de validade |
+| Back (Django + DRF) | [Render](https://render.com) free web service | sim, mas "dorme" após 15min sem uso (~1min pra acordar) |
+| Banco (Postgres) | [Neon](https://neon.tech) free tier | sim, sem prazo de validade (o Postgres free do Render expira em 30 dias) |
 
-**Atenção**: nunca use SQLite em produção nessas plataformas — o disco é
-efêmero e o banco seria apagado a cada deploy/restart. Sempre configure
-`DATABASE_URL` apontando pra um Postgres de verdade em produção.
+A Vercel faz *rewrite* de `/api/*` pro backend no Render (ver
+`frontend/vercel.json`) — do ponto de vista do navegador tudo continua "mesma
+origem", então cookie de sessão e CSRF funcionam sem precisar de
+`django-cors-headers`.
+
+### 1. Banco (Neon)
+Crie um projeto grátis em https://neon.tech e copie a *connection string*
+(`postgres://...`) — vai virar a `DATABASE_URL` do passo 2.
+
+### 2. Backend (Render)
+1. Suba este repositório pro GitHub (se ainda não subiu).
+2. No Render: **New → Blueprint**, aponte pro repo — ele lê o `render.yaml`
+   da raiz e cria o Web Service sozinho (build já roda `collectstatic` +
+   `migrate` a cada deploy).
+3. Depois de criado, preencha as env vars marcadas `sync: false` no
+   `render.yaml`: `DATABASE_URL` (do passo 1), `CSRF_TRUSTED_ORIGINS`
+   (a URL da Vercel do passo 3, ex: `https://seu-app.vercel.app` — só dá
+   pra preencher depois de ter essa URL), `BRAPI_TOKEN`/`COINGECKO_API_KEY`
+   (opcionais).
+4. Anote a URL gerada (ex: `https://carteira-financeira-api.onrender.com`)
+   — se o nome do serviço vier diferente de `carteira-financeira-api`,
+   ajuste também `ALLOWED_HOSTS` no Render e o `destination` em
+   `frontend/vercel.json`.
+5. Crie o superusuário via shell do Render: `python manage.py createsuperuser`.
+
+### 3. Frontend (Vercel)
+1. Na Vercel: **New Project**, importe o mesmo repo.
+2. Em "Root Directory", selecione `frontend`. Framework preset: Vite
+   (build `npm run build`, output `dist` — detectado automaticamente).
+3. Deploy. Depois de ter a URL final (ex: `https://seu-app.vercel.app`),
+   volte no Render e preencha `CSRF_TRUSTED_ORIGINS` com ela (passo 2.3).
+
+**Atenção**: nunca use SQLite em produção — o disco do Render é efêmero e o
+banco seria apagado a cada deploy/restart. Sempre configure `DATABASE_URL`
+apontando pra um Postgres de verdade (Neon).
