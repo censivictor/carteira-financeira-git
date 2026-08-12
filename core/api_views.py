@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.middleware.csrf import get_token
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -86,10 +87,17 @@ class MeAPIView(APIView):
     """Devolve o usuário logado (ou 401/403). O front chama isso no boot do
     app pra saber se já tem sessão válida — e é essa chamada que garante o
     cookie `csrftoken` no navegador antes de qualquer POST (login inclusive),
-    já que nenhuma view de API renderiza template com {% csrf_token %}."""
+    já que nenhuma view de API renderiza template com {% csrf_token %}.
+
+    Também manda o token em `csrfToken` no corpo da resposta: em produção
+    front (Vercel) e back (Render) são domínios diferentes, e JavaScript de
+    um domínio não consegue ler cookie setado por outro — só o corpo do
+    JSON funciona como forma do front saber o valor do token pra mandar de
+    volta no header X-CSRFToken (ver frontend/src/lib/api.js)."""
     permission_classes = [AllowAny]
 
     def get(self, request):
+        csrf_token = get_token(request)
         if not request.user.is_authenticated:
-            return Response({'detail': 'Não autenticado.'}, status=401)
-        return Response({'username': request.user.username})
+            return Response({'detail': 'Não autenticado.', 'csrfToken': csrf_token}, status=401)
+        return Response({'username': request.user.username, 'csrfToken': csrf_token})

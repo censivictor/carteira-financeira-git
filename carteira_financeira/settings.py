@@ -24,15 +24,22 @@ DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
-# Origem do Vite dev server (frontend/) — Django 4+ valida o header Origin
-# em requisições que mudam estado mesmo em HTTP puro, e o proxy do Vite não
-# reescreve esse header (ele só troca o destino da requisição). Só entra em
-# DEBUG (dev local); em produção o Vue já vem buildado e servido pelo
-# próprio Django, mesma origem, sem precisar disso.
+# Origem do Vite dev server (frontend/) em DEBUG, e do front na Vercel em
+# produção — front e back são domínios diferentes (Vercel + Render), então
+# o Django precisa confiar explicitamente na origem de quem manda requisição
+# que muda estado, senão o CsrfViewMiddleware rejeita com 403.
 CSRF_TRUSTED_ORIGINS = env.list(
     'CSRF_TRUSTED_ORIGINS',
     default=['http://localhost:5173', 'http://127.0.0.1:5173'] if DEBUG else [],
 )
+
+# Mesma ideia, só que pro CORS (o navegador bloqueia a resposta antes dela
+# chegar no JS se o back não autorizar a origem explicitamente). Precisa de
+# CORS_ALLOW_CREDENTIALS=True pra mandar/receber o cookie de sessão
+# cross-site — e com credentials, não dá pra usar "*", tem que ser a lista
+# explícita de origens (é o que CORS_ALLOWED_ORIGINS faz).
+CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[])
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -45,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'corsheaders',
     'rest_framework',
     'core',
     'investimentos',
@@ -54,6 +62,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -180,12 +189,20 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Front (Vercel) e back (Render) são domínios diferentes — pro navegador
+    # mandar o cookie de sessão/CSRF numa requisição "cross-site" (fetch de
+    # um domínio pro outro), o cookie precisa ser SameSite=None. Browsers
+    # modernos só aceitam SameSite=None combinado com Secure=True (setado
+    # logo acima).
+    SESSION_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SAMESITE = 'None'
 
 
-# API (consumida pelo front Vue em desenvolvimento — frontend/) — auth por
-# sessão Django (mesmo login de sempre), não JWT. O Vite dev server faz
-# proxy de /api pro Django, então cookie de sessão/CSRF funcionam sem
-# precisar de django-cors-headers.
+# API consumida pelo front Vue (frontend/) — auth por sessão Django (mesmo
+# login de sempre), não JWT. Em dev o Vite faz proxy de /api pro Django
+# (mesma origem). Em produção, front (Vercel) e back (Render) são domínios
+# diferentes de verdade — daí o django-cors-headers + CSRF_TRUSTED_ORIGINS
+# configurados acima.
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',

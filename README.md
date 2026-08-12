@@ -68,10 +68,16 @@ separados:
 | Back (Django + DRF) | [Render](https://render.com) free web service | sim, mas "dorme" após 15min sem uso (~1min pra acordar) |
 | Banco (Postgres) | [Neon](https://neon.tech) free tier | sim, sem prazo de validade (o Postgres free do Render expira em 30 dias) |
 
-A Vercel faz *rewrite* de `/api/*` pro backend no Render (ver
-`frontend/vercel.json`) — do ponto de vista do navegador tudo continua "mesma
-origem", então cookie de sessão e CSRF funcionam sem precisar de
-`django-cors-headers`.
+Front e back ficam em domínios de verdade diferentes (a Vercel não faz
+proxy confiável de rota externa via `vercel.json` — tentamos, não
+funcionou), então o front chama o back **direto** por URL absoluta
+(`VITE_API_URL`), com `django-cors-headers` liberando a origem da Vercel e
+cookie de sessão `SameSite=None; Secure` pra funcionar cross-site. O token
+CSRF, que normalmente viria só do cookie, também vem no corpo de
+`/api/auth/me/` (campo `csrfToken`) — JS de um domínio não lê cookie
+setado por outro, então esse é o jeito do front saber o valor sem
+precisar de cookie cross-domain (ver `frontend/src/lib/api.js` e
+`core/api_views.py::MeAPIView`).
 
 ### 1. Banco (Neon)
 Crie um projeto grátis em https://neon.tech e copie a *connection string*
@@ -83,22 +89,27 @@ Crie um projeto grátis em https://neon.tech e copie a *connection string*
    da raiz e cria o Web Service sozinho (build já roda `collectstatic` +
    `migrate` a cada deploy).
 3. Depois de criado, preencha as env vars marcadas `sync: false` no
-   `render.yaml`: `DATABASE_URL` (do passo 1), `CSRF_TRUSTED_ORIGINS`
-   (a URL da Vercel do passo 3, ex: `https://seu-app.vercel.app` — só dá
-   pra preencher depois de ter essa URL), `BRAPI_TOKEN`/`COINGECKO_API_KEY`
-   (opcionais).
+   `render.yaml`: `DATABASE_URL` (do passo 1), `CSRF_TRUSTED_ORIGINS` e
+   `CORS_ALLOWED_ORIGINS` (a URL da Vercel do passo 3, ex:
+   `https://seu-app.vercel.app` — só dá pra preencher depois de ter essa
+   URL), `BRAPI_TOKEN`/`COINGECKO_API_KEY` (opcionais).
 4. Anote a URL gerada (ex: `https://carteira-financeira-api.onrender.com`)
    — se o nome do serviço vier diferente de `carteira-financeira-api`,
-   ajuste também `ALLOWED_HOSTS` no Render e o `destination` em
-   `frontend/vercel.json`.
-5. Crie o superusuário via shell do Render: `python manage.py createsuperuser`.
+   ajuste também `ALLOWED_HOSTS` no Render.
+5. Crie o superusuário: como o Render free não dá shell, rode localmente
+   `DATABASE_URL=<a da Neon> python manage.py createsuperuser` (aponta
+   direto pro banco de produção).
 
 ### 3. Frontend (Vercel)
 1. Na Vercel: **New Project**, importe o mesmo repo.
 2. Em "Root Directory", selecione `frontend`. Framework preset: Vite
    (build `npm run build`, output `dist` — detectado automaticamente).
-3. Deploy. Depois de ter a URL final (ex: `https://seu-app.vercel.app`),
-   volte no Render e preencha `CSRF_TRUSTED_ORIGINS` com ela (passo 2.3).
+3. Em **Environment Variables**, adiciona `VITE_API_URL` apontando pro
+   backend do Render + `/api` (ex:
+   `https://carteira-financeira-api.onrender.com/api`).
+4. Deploy. Depois de ter a URL final (ex: `https://seu-app.vercel.app`),
+   volta no Render e preenche `CSRF_TRUSTED_ORIGINS` **e**
+   `CORS_ALLOWED_ORIGINS` com ela (passo 2.3), sem `/` no final.
 
 **Atenção**: nunca use SQLite em produção — o disco do Render é efêmero e o
 banco seria apagado a cada deploy/restart. Sempre configure `DATABASE_URL`
