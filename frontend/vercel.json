@@ -1,8 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/proxy-test/:path*",
+      "destination": "https://carteira-financeira-git.onrender.com/api/:path*"
+    },
+    {
       "source": "/api/:path*",
       "destination": "https://carteira-financeira-git.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
