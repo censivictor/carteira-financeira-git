@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: carteira-financeira-api
+    name: carteira-financeira-git
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate --noinput"
@@ -11,7 +11,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: carteira-financeira-api.onrender.com
+        value: carteira-financeira-git.onrender.com
       # Preencha depois de criar o projeto na Vercel, com a URL final dele
       # (ex: https://carteira-financeira.vercel.app). Sem isso o login
       # quebra com erro 403 CSRF.
