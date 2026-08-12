@@ -203,7 +203,7 @@ onMounted(carregarTudo)
     </div>
 
     <Modal v-model:open="modalTransacao" title="Nova transação">
-      <TransacaoForm :ativo-id="ativoId" @created="aoCriarTransacao" />
+      <TransacaoForm :ativo="ativo" @created="aoCriarTransacao" />
     </Modal>
 
     <Modal v-model:open="modalProvento" title="Novo provento">
