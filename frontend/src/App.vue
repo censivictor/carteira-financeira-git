@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import fluxoIcon from '@/assets/brand/fluxo-icon-dark.png'
 import {
   LayoutDashboard,
   Wallet,
@@ -10,7 +11,6 @@ import {
   Tags,
   Repeat,
   LogOut,
-  PiggyBank,
 } from '@lucide/vue'
 
 const route = useRoute()
@@ -44,10 +44,8 @@ async function sair() {
   <div v-if="mostrarLayout" class="flex min-h-screen bg-stone-50">
     <aside class="flex w-64 shrink-0 flex-col border-r border-stone-200 bg-white">
       <div class="flex items-center gap-2.5 px-6 py-6">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-wine text-white">
-          <PiggyBank :size="20" />
-        </div>
-        <span class="text-lg font-bold tracking-tight text-stone-800">Carteira</span>
+        <img :src="fluxoIcon" alt="Fluxo" class="h-9 w-9 rounded-xl object-cover" />
+        <span class="text-lg font-bold tracking-tight text-stone-800">Fluxo</span>
       </div>
 
       <nav class="flex-1 space-y-1 px-3">

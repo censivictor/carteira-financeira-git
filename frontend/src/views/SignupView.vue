@@ -2,7 +2,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { PiggyBank, LoaderCircle } from '@lucide/vue'
+import { LoaderCircle } from '@lucide/vue'
+import fluxoLogo from '@/assets/brand/fluxo-logo-stacked.png'
 
 const username = ref('')
 const password = ref('')
@@ -31,10 +32,7 @@ async function aoEnviar() {
   <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-sand/40 via-stone-50 to-peach/20 px-4">
     <div class="w-full max-w-sm">
       <div class="mb-8 flex flex-col items-center gap-3">
-        <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-wine text-white shadow-lg shadow-wine/20">
-          <PiggyBank :size="28" />
-        </div>
-        <h1 class="text-xl font-bold text-stone-800">Carteira Financeira</h1>
+        <img :src="fluxoLogo" alt="Fluxo" class="h-24 w-auto" />
         <p class="text-sm text-stone-500">Crie sua conta pra começar</p>
       </div>
 
