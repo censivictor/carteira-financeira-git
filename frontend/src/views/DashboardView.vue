@@ -7,7 +7,7 @@ import { formatarMoeda, formatarPct, formatarData } from '@/lib/format'
 import MetricCard from '@/components/MetricCard.vue'
 import BudgetBar from '@/components/BudgetBar.vue'
 import ChartCard from '@/components/ChartCard.vue'
-import { LoaderCircle } from '@lucide/vue'
+import { LoaderCircle, TriangleAlert } from '@lucide/vue'
 
 const dados = ref(null)
 const carregando = ref(true)
@@ -66,6 +66,15 @@ const chartComparacao = computed(() => ({
   }],
 }))
 
+// Mesmos limiares visuais do BudgetBar (80%/100%) — categorias estouradas
+// aparecem primeiro, "quase lá" depois.
+const categoriasEstouradas = computed(() => {
+  if (!dados.value) return []
+  return dados.value.orcamentos
+    .filter((o) => o.pct >= 80)
+    .sort((a, b) => b.pct - a.pct)
+})
+
 const opcoesComparacao = {
   ...opcoesGrafico,
   indexAxis: 'y',
@@ -83,6 +92,23 @@ const opcoesComparacao = {
 
   <div v-else class="space-y-6">
     <h1 class="text-2xl font-bold text-stone-800">Dashboard</h1>
+
+    <!-- Alerta de orçamento -->
+    <div v-if="categoriasEstouradas.length" class="card border-l-4 border-l-red bg-red/5">
+      <div class="flex items-start gap-3">
+        <TriangleAlert :size="20" class="mt-0.5 shrink-0 text-red" />
+        <div class="flex-1">
+          <h3 class="text-sm font-semibold text-stone-800">Atenção ao orçamento deste mês</h3>
+          <ul class="mt-1.5 space-y-1 text-sm text-stone-600">
+            <li v-for="o in categoriasEstouradas" :key="o.categoria">
+              <strong :class="o.pct >= 100 ? 'text-red' : 'text-wine'">{{ o.categoria }}</strong>:
+              {{ formatarMoeda(o.total) }} de {{ formatarMoeda(o.orcamento) }}
+              ({{ o.pct.toFixed(0) }}%{{ o.pct >= 100 ? ' — estourou' : ' — quase no limite' }})
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
     <!-- Métricas principais -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -109,9 +135,10 @@ const opcoesComparacao = {
       />
     </div>
 
-    <div v-if="dados.divida_total > 0" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div v-if="dados.divida_total > 0" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <MetricCard label="Patrimônio líquido (investido - dívidas)" :value="formatarMoeda(dados.patrimonio_liquido)" />
-      <MetricCard label="Dívida em empréstimos" :value="formatarMoeda(dados.divida_total)" variant="loss" hint="Soma do saldo devedor de todos os empréstimos ativos." />
+      <MetricCard label="Dívida em empréstimos" :value="formatarMoeda(dados.divida_emprestimos)" variant="loss" />
+      <MetricCard label="Faturas de cartão em aberto" :value="formatarMoeda(dados.divida_cartoes)" variant="loss" hint="Compras já feitas, ainda não pagas." />
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -155,6 +182,40 @@ const opcoesComparacao = {
           <RouterLink to="/financas/despesas/nova" class="font-medium text-wine hover:underline">Adicionar despesa</RouterLink>
         </template>
       </ChartCard>
+    </div>
+
+    <!-- Alocação-alvo -->
+    <div v-if="dados.alocacao_alvo.length" class="card overflow-x-auto">
+      <div class="mb-3 flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-stone-700">Alocação-alvo</h3>
+        <RouterLink to="/investimentos/alocacao" class="text-xs font-medium text-wine hover:underline">Editar alvo</RouterLink>
+      </div>
+      <table class="w-full min-w-[560px] text-sm">
+        <thead>
+          <tr class="border-b border-stone-200 text-left text-stone-500">
+            <th class="pb-2 font-medium">Classe</th>
+            <th class="pb-2 text-right font-medium">Atual</th>
+            <th class="pb-2 text-right font-medium">Alvo</th>
+            <th class="pb-2 text-right font-medium">Desvio</th>
+            <th class="pb-2 font-medium">Sugestão</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="a in dados.alocacao_alvo" :key="a.tipo" class="border-b border-stone-100 last:border-0">
+            <td class="py-2.5 font-medium text-stone-700">{{ a.tipo_display }}</td>
+            <td class="py-2.5 text-right">{{ formatarPct(a.pct_atual, 1) }}</td>
+            <td class="py-2.5 text-right text-stone-500">{{ formatarPct(a.pct_alvo, 1) }}</td>
+            <td class="py-2.5 text-right font-medium" :class="Math.abs(a.desvio_pct) < 2 ? 'text-stone-400' : a.desvio_pct > 0 ? 'text-red' : 'text-wine'">
+              {{ a.desvio_pct > 0 ? '+' : '' }}{{ formatarPct(a.desvio_pct, 1) }}
+            </td>
+            <td class="py-2.5 text-stone-500">
+              <span v-if="Math.abs(a.desvio_pct) < 2">dentro do alvo</span>
+              <span v-else-if="a.valor_para_ajustar > 0">comprar ~{{ formatarMoeda(a.valor_para_ajustar) }}</span>
+              <span v-else>reduzir ~{{ formatarMoeda(-a.valor_para_ajustar) }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Orçamento por categoria -->

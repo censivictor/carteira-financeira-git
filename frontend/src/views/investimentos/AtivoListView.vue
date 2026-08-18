@@ -4,7 +4,7 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda, formatarData } from '@/lib/format'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle } from '@lucide/vue'
+import { Plus, LoaderCircle, Target } from '@lucide/vue'
 
 const ativos = ref([])
 const carregando = ref(true)
@@ -38,9 +38,14 @@ onMounted(carregar)
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Investimentos</h1>
-      <RouterLink to="/investimentos/novo" class="btn-primary">
-        <Plus :size="16" /> Novo ativo
-      </RouterLink>
+      <div class="flex gap-2">
+        <RouterLink to="/investimentos/alocacao" class="btn-secondary">
+          <Target :size="16" /> Alocação-alvo
+        </RouterLink>
+        <RouterLink to="/investimentos/novo" class="btn-primary">
+          <Plus :size="16" /> Novo ativo
+        </RouterLink>
+      </div>
     </div>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">

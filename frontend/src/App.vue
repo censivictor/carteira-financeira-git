@@ -11,6 +11,8 @@ import {
   Tags,
   Repeat,
   Landmark,
+  CreditCard,
+  Target,
   LogOut,
 } from '@lucide/vue'
 
@@ -34,6 +36,8 @@ const navItems = [
   { label: 'Categorias', to: '/financas/categorias', icon: Tags, disponivel: true },
   { label: 'Recorrentes', to: '/financas/recorrentes', icon: Repeat, disponivel: true },
   { label: 'Empréstimos', to: '/emprestimos', icon: Landmark, disponivel: true },
+  { label: 'Cartões', to: '/cartoes', icon: CreditCard, disponivel: true },
+  { label: 'Metas', to: '/metas', icon: Target, disponivel: true },
 ]
 
 async function sair() {

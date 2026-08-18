@@ -3,8 +3,9 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda, formatarData } from '@/lib/format'
+import { exportarCsv } from '@/lib/csv'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle } from '@lucide/vue'
+import { Plus, LoaderCircle, Download } from '@lucide/vue'
 
 const receitas = ref([])
 const carregando = ref(true)
@@ -14,6 +15,15 @@ async function carregar() {
   carregando.value = true
   receitas.value = await api.get('/financas/receitas/')
   carregando.value = false
+}
+
+function exportar() {
+  const hoje = new Date().toISOString().slice(0, 10)
+  exportarCsv(
+    `receitas-${hoje}.csv`,
+    ['Data', 'Descrição', 'Tipo', 'Valor'],
+    receitas.value.map((r) => [formatarData(r.data), r.descricao, r.tipo_display, r.valor]),
+  )
 }
 
 function pedirExclusao(r) {
@@ -35,9 +45,14 @@ onMounted(carregar)
   <div class="space-y-6">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Receitas</h1>
-      <RouterLink to="/financas/receitas/nova" class="btn-primary">
-        <Plus :size="16" /> Nova receita
-      </RouterLink>
+      <div class="flex gap-2">
+        <button type="button" class="btn-secondary" :disabled="!receitas.length" @click="exportar">
+          <Download :size="16" /> Exportar CSV
+        </button>
+        <RouterLink to="/financas/receitas/nova" class="btn-primary">
+          <Plus :size="16" /> Nova receita
+        </RouterLink>
+      </div>
     </div>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
+from .models import AlocacaoAlvo, Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
 
 
 @admin.register(Ativo)
@@ -29,3 +29,9 @@ class PatrimonioSnapshotAdmin(admin.ModelAdmin):
     list_display = ('data', 'usuario', 'valor_total', 'valor_investido_total')
     list_filter = ('usuario',)
     date_hierarchy = 'data'
+
+
+@admin.register(AlocacaoAlvo)
+class AlocacaoAlvoAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'tipo', 'percentual_alvo')
+    list_filter = ('tipo', 'usuario')

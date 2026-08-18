@@ -35,6 +35,11 @@ const routes = [
     component: () => import('@/views/investimentos/AtivoFormView.vue'),
   },
   {
+    path: '/investimentos/alocacao',
+    name: 'alocacao-alvo',
+    component: () => import('@/views/investimentos/AlocacaoAlvoView.vue'),
+  },
+  {
     path: '/investimentos/:id',
     name: 'ativo-detail',
     component: () => import('@/views/investimentos/AtivoDetailView.vue'),
@@ -58,6 +63,11 @@ const routes = [
     path: '/financas/despesas',
     name: 'despesa-list',
     component: () => import('@/views/financas/DespesaListView.vue'),
+  },
+  {
+    path: '/financas/importar',
+    name: 'importar-extrato',
+    component: () => import('@/views/financas/ImportarExtratoView.vue'),
   },
   {
     path: '/financas/despesas/nova',
@@ -118,6 +128,46 @@ const routes = [
     path: '/emprestimos/:id',
     name: 'emprestimo-detail',
     component: () => import('@/views/emprestimos/EmprestimoDetailView.vue'),
+  },
+  {
+    path: '/cartoes',
+    name: 'cartao-list',
+    component: () => import('@/views/cartoes/CartaoListView.vue'),
+  },
+  {
+    path: '/cartoes/novo',
+    name: 'cartao-create',
+    component: () => import('@/views/cartoes/CartaoFormView.vue'),
+  },
+  {
+    path: '/cartoes/:id/editar',
+    name: 'cartao-update',
+    component: () => import('@/views/cartoes/CartaoFormView.vue'),
+  },
+  {
+    path: '/cartoes/:id',
+    name: 'cartao-detail',
+    component: () => import('@/views/cartoes/CartaoDetailView.vue'),
+  },
+  {
+    path: '/metas',
+    name: 'meta-list',
+    component: () => import('@/views/metas/MetaListView.vue'),
+  },
+  {
+    path: '/metas/nova',
+    name: 'meta-create',
+    component: () => import('@/views/metas/MetaFormView.vue'),
+  },
+  {
+    path: '/metas/:id/editar',
+    name: 'meta-update',
+    component: () => import('@/views/metas/MetaFormView.vue'),
+  },
+  {
+    path: '/metas/:id',
+    name: 'meta-detail',
+    component: () => import('@/views/metas/MetaDetailView.vue'),
   },
 ]
 

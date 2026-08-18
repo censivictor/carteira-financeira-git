@@ -4,11 +4,12 @@ from django.db.models import Min, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
+from cartoes.models import FaturaCartao
 from emprestimos.models import Emprestimo
 from financas import services as financas_services
 from financas.models import CategoriaDespesa, Despesa, Receita
 from investimentos import services
-from investimentos.models import Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
+from investimentos.models import AlocacaoAlvo, Ativo, PatrimonioSnapshot, Provento, TransacaoAtivo
 
 MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
@@ -51,6 +52,9 @@ def build_dashboard_data(usuario):
     alocacao = []
     valor_investido_total = Decimal('0')
     valor_atual_total = Decimal('0')
+    # Total atual por classe (Ação/FII/Cripto/Renda Fixa) — alimenta a
+    # comparação com a alocação-alvo mais abaixo.
+    valor_atual_por_tipo = {}
     # Subtotal só de Ação/FII/Cripto (exclui Renda Fixa) — usado na
     # comparação com CDI/Ibovespa mais abaixo, já que Renda Fixa não é
     # "risco de mercado" e comparar de novo contra CDI seria redundante.
@@ -95,6 +99,7 @@ def build_dashboard_data(usuario):
 
         valor_atual_total += valor_atual
         valor_investido_total += valor_investido
+        valor_atual_por_tipo[ativo.tipo] = valor_atual_por_tipo.get(ativo.tipo, Decimal('0')) + valor_atual
         if ativo.tipo != Ativo.Tipo.RENDA_FIXA:
             valor_atual_mercado += valor_atual
             valor_investido_mercado += valor_investido
@@ -112,12 +117,42 @@ def build_dashboard_data(usuario):
 
     ganho_perda_total_pct = _variacao_pct(valor_atual_total, valor_investido_total) or 0
 
+    # --- Alocação-alvo (comparação com a % desejada por classe) ---
+    # Só entra na comparação a classe que tem alvo definido — sem nenhum
+    # alvo cadastrado, a seção simplesmente não aparece no dashboard.
+    percentuais_alvo = {a.tipo: a.percentual_alvo for a in AlocacaoAlvo.objects.filter(usuario=usuario)}
+    alocacao_alvo = []
+    for tipo_key, tipo_label in Ativo.Tipo.choices:
+        if tipo_key not in percentuais_alvo:
+            continue
+        pct_alvo = percentuais_alvo[tipo_key]
+        valor_tipo = valor_atual_por_tipo.get(tipo_key, Decimal('0'))
+        pct_atual = float(valor_tipo / valor_atual_total * 100) if valor_atual_total else 0
+        valor_alvo = valor_atual_total * pct_alvo / Decimal('100')
+        alocacao_alvo.append({
+            'tipo': tipo_key,
+            'tipo_display': tipo_label,
+            'valor_atual': float(valor_tipo),
+            'pct_atual': pct_atual,
+            'pct_alvo': float(pct_alvo),
+            'desvio_pct': pct_atual - float(pct_alvo),
+            # positivo = falta comprar pra chegar no alvo; negativo = tem sobra (considere vender/parar de aportar)
+            'valor_para_ajustar': float(valor_alvo - valor_tipo),
+        })
+
     # --- Empréstimos (saldo devedor total) ---
     # Poucos empréstimos pra uso pessoal — soma em Python (saldo_devedor é
     # uma property calculada a partir da tabela de parcelas, não uma coluna).
-    divida_total = sum(
+    divida_emprestimos = sum(
         (e.saldo_devedor for e in Emprestimo.objects.filter(usuario=usuario)), Decimal('0')
     )
+    # Fatura de cartão só vira Despesa quando é paga — enquanto isso, o
+    # valor em aberto é uma dívida "escondida" que ainda não apareceu nos
+    # gastos do mês, então também precisa entrar no patrimônio líquido.
+    divida_cartoes = FaturaCartao.objects.filter(cartao__usuario=usuario, paga=False).aggregate(
+        s=Sum('parcelas__valor')
+    )['s'] or Decimal('0')
+    divida_total = divida_emprestimos + divida_cartoes
     patrimonio_liquido = valor_atual_total - divida_total
 
     # --- Renda e despesas do mês ---
@@ -252,12 +287,15 @@ def build_dashboard_data(usuario):
         'patrimonio_total': float(valor_atual_total),
         'valor_investido_total': float(valor_investido_total),
         'divida_total': float(divida_total),
+        'divida_emprestimos': float(divida_emprestimos),
+        'divida_cartoes': float(divida_cartoes),
         'patrimonio_liquido': float(patrimonio_liquido),
         'ganho_perda_total_pct': ganho_perda_total_pct,
         'proventos_mes': float(proventos_mes),
         'proventos_total': float(proventos_total),
         'retorno_total_pct': retorno_total_pct,
         'alocacao': alocacao,
+        'alocacao_alvo': alocacao_alvo,
         'receita_mes_atual': float(receita_mes_atual),
         'despesa_mes_atual': float(despesa_mes_atual),
         'saldo_mes_atual': float(saldo_mes_atual),

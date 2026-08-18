@@ -2,6 +2,7 @@ from decimal import Decimal
 from functools import cached_property
 
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
 
@@ -131,6 +132,29 @@ class Ativo(models.Model):
         if self.tipo == self.Tipo.RENDA_FIXA:
             return self.valor_aplicado or Decimal('0')
         return (self.quantidade or Decimal('0')) * (self.preco_medio_compra or Decimal('0'))
+
+
+class AlocacaoAlvo(models.Model):
+    """% desejado de cada classe de ativo na carteira (ex: 60% Ação, 30%
+    FII, 10% Cripto) — usado só pra comparar com a alocação atual no
+    dashboard e sugerir rebalanceamento. Uma linha por classe por usuário;
+    classe sem linha aqui simplesmente não entra na comparação."""
+
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='alocacoes_alvo')
+    tipo = models.CharField(max_length=10, choices=Ativo.Tipo.choices)
+    percentual_alvo = models.DecimalField(
+        max_digits=5, decimal_places=2,
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('100'))],
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('usuario', 'tipo')
+        verbose_name = 'Alocação-alvo'
+        verbose_name_plural = 'Alocações-alvo'
+
+    def __str__(self):
+        return f'{self.get_tipo_display()}: {self.percentual_alvo}%'
 
 
 class TransacaoAtivo(models.Model):
