@@ -4,6 +4,7 @@ from django.db.models import Min, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 
+from emprestimos.models import Emprestimo
 from financas import services as financas_services
 from financas.models import CategoriaDespesa, Despesa, Receita
 from investimentos import services
@@ -110,6 +111,14 @@ def build_dashboard_data(usuario):
         })
 
     ganho_perda_total_pct = _variacao_pct(valor_atual_total, valor_investido_total) or 0
+
+    # --- Empréstimos (saldo devedor total) ---
+    # Poucos empréstimos pra uso pessoal — soma em Python (saldo_devedor é
+    # uma property calculada a partir da tabela de parcelas, não uma coluna).
+    divida_total = sum(
+        (e.saldo_devedor for e in Emprestimo.objects.filter(usuario=usuario)), Decimal('0')
+    )
+    patrimonio_liquido = valor_atual_total - divida_total
 
     # --- Renda e despesas do mês ---
     hoje = timezone.now().date()
@@ -242,6 +251,8 @@ def build_dashboard_data(usuario):
     return {
         'patrimonio_total': float(valor_atual_total),
         'valor_investido_total': float(valor_investido_total),
+        'divida_total': float(divida_total),
+        'patrimonio_liquido': float(patrimonio_liquido),
         'ganho_perda_total_pct': ganho_perda_total_pct,
         'proventos_mes': float(proventos_mes),
         'proventos_total': float(proventos_total),

@@ -11,7 +11,7 @@
 // de /auth/me/ (campo `csrfToken`, ver core/api_views.py::MeAPIView) e fica
 // cacheado em memória aqui como fallback.
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api'
+export const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 let csrfTokenEmMemoria = null
 

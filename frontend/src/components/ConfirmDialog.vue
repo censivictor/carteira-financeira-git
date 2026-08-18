@@ -15,6 +15,9 @@ defineProps({
   title: { type: String, default: 'Tem certeza?' },
   description: { type: String, default: 'Essa ação não pode ser desfeita.' },
   confirmLabel: { type: String, default: 'Excluir' },
+  // 'destructive' (padrão, vermelho) pra exclusão, 'primary' (wine) pra
+  // confirmações neutras/positivas — ex: marcar uma parcela como paga.
+  variant: { type: String, default: 'destructive' },
 })
 const emit = defineEmits(['confirm'])
 </script>
@@ -31,7 +34,11 @@ const emit = defineEmits(['confirm'])
 
         <div class="mt-6 flex justify-end gap-2">
           <AlertDialogCancel class="btn-secondary">Cancelar</AlertDialogCancel>
-          <AlertDialogAction class="btn-primary bg-red hover:bg-red/90" @click="emit('confirm')">
+          <AlertDialogAction
+            class="btn-primary"
+            :class="variant === 'destructive' ? 'bg-red hover:bg-red/90' : ''"
+            @click="emit('confirm')"
+          >
             {{ confirmLabel }}
           </AlertDialogAction>
         </div>

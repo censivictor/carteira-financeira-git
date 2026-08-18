@@ -109,6 +109,11 @@ const opcoesComparacao = {
       />
     </div>
 
+    <div v-if="dados.divida_total > 0" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <MetricCard label="Patrimônio líquido (investido - dívidas)" :value="formatarMoeda(dados.patrimonio_liquido)" />
+      <MetricCard label="Dívida em empréstimos" :value="formatarMoeda(dados.divida_total)" variant="loss" hint="Soma do saldo devedor de todos os empréstimos ativos." />
+    </div>
+
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div class="card">
         <div class="text-sm text-stone-500">Receita deste mês</div>

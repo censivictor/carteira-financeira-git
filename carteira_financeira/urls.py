@@ -22,6 +22,7 @@ from investimentos.api_views import (
     ProventoViewSet,
     TransacaoAtivoViewSet,
 )
+from emprestimos.api_views import EmprestimoViewSet, ParcelaEmprestimoViewSet
 
 # API consumida pelo front Vue (frontend/) — aditiva, não mexe nas rotas
 # de template abaixo. Ver plano de migração em core/api_views.py.
@@ -33,6 +34,8 @@ router.register('financas/categorias', CategoriaDespesaViewSet, basename='api-ca
 router.register('financas/despesas', DespesaViewSet, basename='api-despesa')
 router.register('financas/recorrentes', DespesaRecorrenteViewSet, basename='api-recorrente')
 router.register('financas/receitas', ReceitaViewSet, basename='api-receita')
+router.register('emprestimos', EmprestimoViewSet, basename='api-emprestimo')
+router.register('emprestimos-parcelas', ParcelaEmprestimoViewSet, basename='api-parcela-emprestimo')
 
 api_urlpatterns = [
     path('dashboard/', DashboardAPIView.as_view(), name='api-dashboard'),

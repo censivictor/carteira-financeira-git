@@ -10,6 +10,7 @@ import {
   ArrowUpCircle,
   Tags,
   Repeat,
+  Landmark,
   LogOut,
 } from '@lucide/vue'
 
@@ -32,6 +33,7 @@ const navItems = [
   { label: 'Receitas', to: '/financas/receitas', icon: ArrowUpCircle, disponivel: true },
   { label: 'Categorias', to: '/financas/categorias', icon: Tags, disponivel: true },
   { label: 'Recorrentes', to: '/financas/recorrentes', icon: Repeat, disponivel: true },
+  { label: 'Empréstimos', to: '/emprestimos', icon: Landmark, disponivel: true },
 ]
 
 async function sair() {

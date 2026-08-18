@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { api } from '@/lib/api'
+import { API_BASE } from '@/lib/api'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -26,7 +26,7 @@ async function buscar(q) {
   if (controller) controller.abort()
   controller = new AbortController()
   try {
-    const resp = await fetch(`/api/investimentos/buscar/?tipo=${props.tipo}&q=${encodeURIComponent(q)}`, {
+    const resp = await fetch(`${API_BASE}/investimentos/buscar/?tipo=${props.tipo}&q=${encodeURIComponent(q)}`, {
       credentials: 'include',
       signal: controller.signal,
     })

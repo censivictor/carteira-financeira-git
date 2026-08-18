@@ -99,6 +99,26 @@ const routes = [
     name: 'recorrente-update',
     component: () => import('@/views/financas/RecorrenteFormView.vue'),
   },
+  {
+    path: '/emprestimos',
+    name: 'emprestimo-list',
+    component: () => import('@/views/emprestimos/EmprestimoListView.vue'),
+  },
+  {
+    path: '/emprestimos/novo',
+    name: 'emprestimo-create',
+    component: () => import('@/views/emprestimos/EmprestimoFormView.vue'),
+  },
+  {
+    path: '/emprestimos/:id/editar',
+    name: 'emprestimo-update',
+    component: () => import('@/views/emprestimos/EmprestimoFormView.vue'),
+  },
+  {
+    path: '/emprestimos/:id',
+    name: 'emprestimo-detail',
+    component: () => import('@/views/emprestimos/EmprestimoDetailView.vue'),
+  },
 ]
 
 const router = createRouter({
