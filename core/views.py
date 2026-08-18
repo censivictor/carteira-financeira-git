@@ -107,6 +107,7 @@ def build_dashboard_data(usuario):
         alocacao.append({
             'ticker': ativo.ticker,
             'tipo': ativo.get_tipo_display(),
+            'tipo_code': ativo.tipo,
             'quantidade': quantidade_exibicao,
             'preco_atual': preco_exibicao,
             'valor_atual': float(valor_atual),

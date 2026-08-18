@@ -2,7 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
-import { formatarMoeda, formatarData } from '@/lib/format'
+import { formatarMoeda, formatarMoedaPrecisa, formatarData } from '@/lib/format'
+
+// Cripto barata tem preço médio na casa de frações de centavo — formatarMoeda
+// arredondaria pra "R$ 0,00", sem sentido.
+function formatarPreco(valor, tipo) {
+  return tipo === 'CRIPTO' ? formatarMoedaPrecisa(valor) : formatarMoeda(valor)
+}
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { Plus, LoaderCircle, Target } from '@lucide/vue'
 
@@ -81,7 +87,7 @@ onMounted(carregar)
             </template>
             <template v-else>
               <td class="py-2.5 text-right text-stone-700">{{ a.quantidade }}</td>
-              <td class="py-2.5 text-right text-stone-700">{{ formatarMoeda(a.preco_medio_compra) }}</td>
+              <td class="py-2.5 text-right text-stone-700">{{ formatarPreco(a.preco_medio_compra, a.tipo) }}</td>
             </template>
             <td class="py-2.5 text-right text-stone-700">{{ formatarMoeda(a.valor_investido) }}</td>
             <td class="py-2.5 text-right">

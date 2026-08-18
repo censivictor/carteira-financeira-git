@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Pie, Bar, Line } from 'vue-chartjs'
 import { api } from '@/lib/api'
 import { PALETA } from '@/lib/chart'
-import { formatarMoeda, formatarPct, formatarData } from '@/lib/format'
+import { formatarMoeda, formatarMoedaPrecisa, formatarPct, formatarData } from '@/lib/format'
 import MetricCard from '@/components/MetricCard.vue'
 import BudgetBar from '@/components/BudgetBar.vue'
 import ChartCard from '@/components/ChartCard.vue'
@@ -291,7 +291,7 @@ const opcoesComparacao = {
             <td class="py-2 text-stone-500">{{ a.tipo }}</td>
             <td class="py-2 text-right text-stone-700">{{ a.quantidade ?? '—' }}</td>
             <td class="py-2 text-right text-stone-700">
-              {{ a.preco_atual !== null ? formatarMoeda(a.preco_atual) : '—' }}
+              {{ a.preco_atual !== null ? (a.tipo_code === 'CRIPTO' ? formatarMoedaPrecisa(a.preco_atual) : formatarMoeda(a.preco_atual)) : '—' }}
               <span v-if="!a.cotacao_disponivel" class="ml-1 rounded-full bg-peach/30 px-2 py-0.5 text-[10px] text-wine">estimativa</span>
             </td>
             <td class="py-2 text-right text-stone-700">{{ formatarMoeda(a.valor_atual) }}</td>

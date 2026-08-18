@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
-import { formatarMoeda, formatarData } from '@/lib/format'
+import { formatarMoeda, formatarMoedaPrecisa, formatarData } from '@/lib/format'
 import Modal from '@/components/Modal.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import TransacaoForm from '@/components/TransacaoForm.vue'
@@ -18,6 +18,10 @@ const proventos = ref([])
 const carregando = ref(true)
 
 const mostraProventos = computed(() => ativo.value && ['ACAO', 'FII'].includes(ativo.value.tipo))
+// Cripto barata tem preço unitário na casa de frações de centavo — usa
+// formatação com mais casas decimais pra não virar "R$ 0,00" na tela.
+const ehCripto = computed(() => ativo.value?.tipo === 'CRIPTO')
+const formatarPreco = (v) => (ehCripto.value ? formatarMoedaPrecisa(v) : formatarMoeda(v))
 const proventosTotal = computed(() => proventos.value.reduce((soma, p) => soma + p.valor_total, 0))
 
 const modalTransacao = ref(false)
@@ -118,7 +122,7 @@ onMounted(carregarTudo)
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Preço médio</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarMoeda(ativo.preco_medio_compra) }}</div>
+        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarPreco(ativo.preco_medio_compra) }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Valor investido</div>
@@ -157,7 +161,7 @@ onMounted(carregarTudo)
               </span>
             </td>
             <td class="py-2.5 text-right">{{ t.quantidade }}</td>
-            <td class="py-2.5 text-right">{{ formatarMoeda(t.preco_unitario) }}</td>
+            <td class="py-2.5 text-right">{{ formatarPreco(t.preco_unitario) }}</td>
             <td class="py-2.5 pr-4 text-right">{{ formatarMoeda(t.valor_total) }}</td>
             <td class="py-2.5 text-stone-500">{{ t.observacao || '—' }}</td>
             <td class="py-2.5 text-right">

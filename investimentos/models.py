@@ -171,8 +171,12 @@ class TransacaoAtivo(models.Model):
     ativo = models.ForeignKey(Ativo, on_delete=models.CASCADE, related_name='transacoes')
     tipo = models.CharField(max_length=6, choices=Tipo.choices)
     quantidade = models.DecimalField(max_digits=20, decimal_places=8)
+    # 8 casas decimais (não 2): cripto barata tem preço unitário na casa de
+    # frações de centavo — ex: comprar R$20 de um token a R$0,00005971 cada.
+    # Com só 2 casas, o DRF rejeitava o lançamento ("no more than 2 decimal
+    # places").
     preco_unitario = models.DecimalField(
-        max_digits=18, decimal_places=2, help_text='Preço por unidade nessa transação, em BRL.'
+        max_digits=20, decimal_places=8, help_text='Preço por unidade nessa transação, em BRL.'
     )
     data = models.DateField(default=timezone.now)
     observacao = models.CharField(max_length=200, blank=True)
