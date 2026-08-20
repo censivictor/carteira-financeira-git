@@ -32,6 +32,11 @@ class Ativo(models.Model):
         SELIC = 'SELIC', '% da Selic'
         PREFIXADO = 'PREFIXADO', 'Prefixado (taxa fixa ao ano)'
 
+    class Moeda(models.TextChoices):
+        BRL = 'BRL', 'Real (R$)'
+        USD = 'USD', 'Dólar (US$)'
+        EUR = 'EUR', 'Euro (€)'
+
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ativos')
     ticker = models.CharField(
         max_length=15,
@@ -48,6 +53,14 @@ class Ativo(models.Model):
         null=True,
         help_text='ID do CoinGecko (ex: bitcoin, ethereum). Obrigatório só para criptomoedas.',
     )
+    # Só faz sentido pra CRIPTO — Ação/FII são cotados na B3 (sempre BRL) e
+    # Renda Fixa é indexada a CDI/Selic (índices do Banco Central, também
+    # sempre BRL). É uma moeda de EXIBIÇÃO da cotação atual, não muda o custo
+    # de aquisição: preço médio/valor investido continuam sempre em BRL (o
+    # que o usuário efetivamente pagou), só o preço/valor atual de mercado
+    # ganha uma segunda leitura na moeda escolhida — ver
+    # investimentos/services.py::avaliar_ativo.
+    moeda = models.CharField(max_length=3, choices=Moeda.choices, default=Moeda.BRL)
 
     # --- Campos específicos de Renda Fixa ---
     indexador = models.CharField(

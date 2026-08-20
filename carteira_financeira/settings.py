@@ -101,6 +101,16 @@ WSGI_APPLICATION = 'carteira_financeira.wsgi.application'
 DATABASES = {
     'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR / "db.sqlite3"}')
 }
+# Sem isso, o Django abre e fecha uma conexão NOVA com o Postgres a cada
+# requisição (comportamento padrão) — como o banco (Neon) é remoto/serverless,
+# esse handshake de TCP+TLS+auth sozinho já custa uma fração de segundo por
+# requisição, medido em produção (~1-2s até em endpoints triviais). Reaproveita
+# a conexão por até 60s entre requisições; CONN_HEALTH_CHECKS garante que uma
+# conexão que caiu nesse meio tempo (ex: Neon suspendeu o compute) seja
+# detectada e trocada em vez de estourar erro. Não afeta o SQLite local (esse
+# backend ignora as duas opções).
+DATABASES['default']['CONN_MAX_AGE'] = 60
+DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 
 
 # Password validation
@@ -213,4 +223,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    # Só login/signup usam throttle (via throttle_scope nas views) — não dá
+    # pra travar as outras rotas todas com um rate genérico sem quebrar o
+    # uso normal do dashboard, que faz várias chamadas em paralelo. Escopos
+    # separados pra um ataque de login não consumir o orçamento do signup.
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'auth-login': '10/min',
+        'auth-signup': '5/min',
+    },
+    # DRF's Throttled vem em inglês por padrão — troca só a mensagem dela,
+    # mantendo o resto do comportamento default do DRF.
+    'EXCEPTION_HANDLER': 'core.exceptions.custom_exception_handler',
 }

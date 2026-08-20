@@ -35,7 +35,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Empréstimos</h1>
       <RouterLink to="/emprestimos/novo" class="btn-primary">
@@ -62,21 +62,21 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="e in emprestimos" :key="e.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5 font-medium text-wine">
+            <td class="py-2 font-medium text-wine">
               <RouterLink :to="`/emprestimos/${e.id}`" class="hover:underline">{{ e.descricao }}</RouterLink>
             </td>
-            <td class="py-2.5 text-stone-500">{{ e.sistema_amortizacao_display }}</td>
-            <td class="py-2.5 text-right text-stone-700">{{ formatarMoeda(e.valor_total) }}</td>
-            <td class="py-2.5 text-right font-medium" :class="e.quitado ? 'text-emerald-600' : 'text-stone-800'">
+            <td class="py-2 text-stone-500">{{ e.sistema_amortizacao_display }}</td>
+            <td class="py-2 text-right text-stone-700">{{ formatarMoeda(e.valor_total) }}</td>
+            <td class="py-2 text-right font-medium" :class="e.quitado ? 'text-emerald-600' : 'text-stone-800'">
               {{ formatarMoeda(e.saldo_devedor) }}
             </td>
-            <td class="py-2.5 text-right text-stone-700">{{ e.parcelas_pagas_count }}/{{ e.numero_parcelas }}</td>
-            <td class="py-2.5">
+            <td class="py-2 text-right text-stone-700">{{ e.parcelas_pagas_count }}/{{ e.numero_parcelas }}</td>
+            <td class="py-2">
               <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="e.quitado ? 'bg-emerald-100 text-emerald-700' : 'bg-peach/30 text-wine'">
                 {{ e.quitado ? 'Quitado' : 'Em andamento' }}
               </span>
             </td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right">
               <RouterLink :to="`/emprestimos/${e.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(e)">Excluir</button>
             </td>

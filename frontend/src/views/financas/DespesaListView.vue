@@ -42,7 +42,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Despesas</h1>
       <div class="flex gap-2">
@@ -75,16 +75,16 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="d in despesas" :key="d.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ formatarData(d.data) }}</td>
-            <td class="py-2.5">
+            <td class="py-2">{{ formatarData(d.data) }}</td>
+            <td class="py-2">
               {{ d.descricao }}
               <span v-if="d.recorrente" class="ml-1 rounded-full bg-stone-100 px-2 py-0.5 text-[10px] text-stone-400">automática</span>
             </td>
-            <td class="py-2.5">
+            <td class="py-2">
               <span class="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" :style="{ backgroundColor: d.categoria_cor }">{{ d.categoria_nome }}</span>
             </td>
-            <td class="py-2.5 text-right pr-4">{{ formatarMoeda(d.valor) }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right pr-4">{{ formatarMoeda(d.valor) }}</td>
+            <td class="py-2 text-right">
               <RouterLink :to="`/financas/despesas/${d.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(d)">Excluir</button>
             </td>

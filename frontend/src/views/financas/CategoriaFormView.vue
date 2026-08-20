@@ -42,7 +42,7 @@ async function salvar() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-md space-y-6">
+  <div class="mx-auto max-w-md space-y-4">
     <h1 class="text-2xl font-bold text-stone-800">{{ editando ? 'Editar categoria' : 'Nova categoria' }}</h1>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">

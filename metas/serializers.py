@@ -1,3 +1,5 @@
+from investimentos import services as investimentos_services
+from investimentos.models import Ativo
 from rest_framework import serializers
 
 from .models import AporteMeta, MetaFinanceira
@@ -7,11 +9,39 @@ class MetaFinanceiraSerializer(serializers.ModelSerializer):
     valor_atual = serializers.ReadOnlyField()
     pct = serializers.ReadOnlyField()
     concluida = serializers.ReadOnlyField()
+    ativos_detail = serializers.SerializerMethodField()
 
     class Meta:
         model = MetaFinanceira
-        fields = ['id', 'nome', 'valor_alvo', 'data_alvo', 'valor_atual', 'pct', 'concluida', 'criado_em']
+        fields = [
+            'id', 'nome', 'valor_alvo', 'data_alvo', 'ativos', 'ativos_detail',
+            'valor_atual', 'pct', 'concluida', 'criado_em',
+        ]
         read_only_fields = ['id', 'criado_em']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get('request')
+        if request:
+            # sem isso, o campo aceitaria o ID de um ativo de outro usuário.
+            self.fields['ativos'].queryset = Ativo.objects.filter(usuario=request.user)
+
+    def get_ativos_detail(self, obj):
+        ativos = list(obj.ativos.all())
+        if not ativos:
+            return []
+        # 2ª chamada de avaliação nessa mesma resposta (a 1ª é o campo
+        # `valor_atual`, via MetaFinanceira.valor_atual) — sem problema:
+        # get_cotacoes_acoes/get_cotacoes_cripto já cacheiam por 60s, então
+        # não vira 2 chamadas de verdade pra API externa.
+        valores = investimentos_services.avaliar_ativos(ativos)
+        return [
+            {
+                'id': a.id, 'ticker': a.ticker, 'tipo': a.tipo, 'tipo_display': a.get_tipo_display(),
+                'valor_atual': float(valores.get(a.id, 0)),
+            }
+            for a in ativos
+        ]
 
 
 class AporteMetaSerializer(serializers.ModelSerializer):

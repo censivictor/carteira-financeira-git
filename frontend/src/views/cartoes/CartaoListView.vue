@@ -32,7 +32,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Cartões de crédito</h1>
       <RouterLink to="/cartoes/novo" class="btn-primary">

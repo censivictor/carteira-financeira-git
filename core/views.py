@@ -48,6 +48,13 @@ def build_dashboard_data(usuario):
 
     cotacoes_acoes = services.get_cotacoes_acoes(tickers)
     cotacoes_cripto = services.get_cotacoes_cripto(cripto_ids)
+    # Moedas de exibição != BRL realmente em uso — normalmente nenhuma, então
+    # não gera chamada extra à API pra quem nunca mexeu nisso (ver
+    # investimentos/models.py::Ativo.moeda).
+    moedas_nativas = {a.moeda for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.moeda != Ativo.Moeda.BRL}
+    cotacoes_cripto_nativa = {
+        moeda: services.get_cotacoes_cripto(cripto_ids, vs=moeda.lower()) for moeda in moedas_nativas
+    }
 
     alocacao = []
     valor_investido_total = Decimal('0')
@@ -70,32 +77,23 @@ def build_dashboard_data(usuario):
 
         valor_investido = ativo.valor_investido
 
-        if ativo.tipo in TIPOS_COTADOS_B3:
-            info = cotacoes_acoes.get(ativo.ticker, {})
-            preco = info.get('preco')
-            cotacao_disponivel = preco is not None
-            # sem cotação disponível (API fora do ar), usa o preço médio de
-            # compra como fallback só pra não zerar o card de patrimônio
-            preco_decimal = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
-            valor_atual = ativo.quantidade * preco_decimal
-            quantidade_exibicao = float(ativo.quantidade)
-            preco_exibicao = float(preco_decimal)
+        # Lógica de valoração (cotar + fallback pro preço médio/valor
+        # aplicado quando a API está fora do ar) mora em services.avaliar_ativo
+        # — reaproveitada também por MetaFinanceira.valor_atual (metas/models.py)
+        # via services.avaliar_ativos, pra não duplicar essa regra em dois lugares.
+        avaliacao = services.avaliar_ativo(ativo, cotacoes_acoes, cotacoes_cripto, cotacoes_cripto_nativa)
+        valor_atual = avaliacao['valor_atual']
+        cotacao_disponivel = avaliacao['cotacao_disponivel']
 
-        elif ativo.tipo == Ativo.Tipo.CRIPTO:
-            info = cotacoes_cripto.get(ativo.coingecko_id, {})
-            preco = info.get('preco')
-            cotacao_disponivel = preco is not None
-            preco_decimal = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
-            valor_atual = ativo.quantidade * preco_decimal
-            quantidade_exibicao = float(ativo.quantidade)
-            preco_exibicao = float(preco_decimal)
-
-        else:  # RENDA_FIXA — sem cotação de mercado, valor estimado via taxa do BCB
-            valor_calculado = services.calcular_valor_atual_renda_fixa(ativo)
-            cotacao_disponivel = valor_calculado is not None
-            valor_atual = valor_calculado if cotacao_disponivel else ativo.valor_aplicado
+        if ativo.tipo == Ativo.Tipo.RENDA_FIXA:
             quantidade_exibicao = None
             preco_exibicao = None
+        else:
+            quantidade_exibicao = float(ativo.quantidade)
+            preco_exibicao = float(avaliacao['preco_atual']) if avaliacao['preco_atual'] is not None else None
+        preco_nativo_exibicao = (
+            float(avaliacao['preco_atual_nativo']) if avaliacao['preco_atual_nativo'] is not None else None
+        )
 
         valor_atual_total += valor_atual
         valor_investido_total += valor_investido
@@ -114,6 +112,11 @@ def build_dashboard_data(usuario):
             'valor_investido': float(valor_investido),
             'ganho_perda_pct': _variacao_pct(valor_atual, valor_investido) or 0,
             'cotacao_disponivel': cotacao_disponivel,
+            # preco_atual/valor_atual acima são SEMPRE BRL (alimentam os
+            # totais do patrimônio) — isso aqui é só a leitura adicional na
+            # moeda de exibição escolhida pro ativo, quando != BRL.
+            'moeda': ativo.moeda if ativo.tipo == Ativo.Tipo.CRIPTO else Ativo.Moeda.BRL,
+            'preco_atual_nativo': preco_nativo_exibicao,
         })
 
     ganho_perda_total_pct = _variacao_pct(valor_atual_total, valor_investido_total) or 0

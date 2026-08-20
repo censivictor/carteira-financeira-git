@@ -11,7 +11,7 @@ const ativoId = route.params.id || null
 const editando = computed(() => !!ativoId)
 
 const form = ref({
-  ticker: '', nome: '', tipo: '', coingecko_id: '',
+  ticker: '', nome: '', tipo: '', coingecko_id: '', moeda: 'BRL',
   indexador: '', taxa_contratada: '', valor_aplicado: '', data_aplicacao: '',
   ativo_flag: true,
 })
@@ -27,7 +27,7 @@ onMounted(async () => {
   if (editando.value) {
     const a = await api.get(`/investimentos/ativos/${ativoId}/`)
     form.value = {
-      ticker: a.ticker, nome: a.nome || '', tipo: a.tipo, coingecko_id: a.coingecko_id || '',
+      ticker: a.ticker, nome: a.nome || '', tipo: a.tipo, coingecko_id: a.coingecko_id || '', moeda: a.moeda || 'BRL',
       indexador: a.indexador || '', taxa_contratada: a.taxa_contratada || '',
       valor_aplicado: a.valor_aplicado || '', data_aplicacao: a.data_aplicacao || '',
       ativo_flag: a.ativo_flag,
@@ -79,7 +79,7 @@ async function salvar() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-xl space-y-6">
+  <div class="mx-auto max-w-xl space-y-4">
     <h1 class="text-2xl font-bold text-stone-800">{{ editando ? 'Editar ativo' : 'Novo ativo' }}</h1>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">
@@ -124,6 +124,19 @@ async function salvar() {
         <label class="mb-1.5 block text-sm font-medium text-stone-700">Criptomoeda (digite o nome pra buscar)</label>
         <AtivoAutocomplete v-model="form.coingecko_id" tipo="CRIPTO" placeholder='ex: digite "bitcoin"' @select="aoSelecionarCripto" />
         <p v-if="erros.coingecko_id" class="mt-1 text-xs text-red">{{ erros.coingecko_id[0] }}</p>
+      </div>
+
+      <div v-if="mostrarCripto">
+        <label class="mb-1.5 block text-sm font-medium text-stone-700">Moeda de exibição da cotação</label>
+        <select v-model="form.moeda" class="input">
+          <option value="BRL">Real (R$)</option>
+          <option value="USD">Dólar (US$)</option>
+          <option value="EUR">Euro (€)</option>
+        </select>
+        <p class="mt-1 text-xs text-stone-400">
+          Só muda como o preço/valor atual é exibido — custo de aquisição e totais do patrimônio continuam sempre em BRL.
+        </p>
+        <p v-if="erros.moeda" class="mt-1 text-xs text-red">{{ erros.moeda[0] }}</p>
       </div>
 
       <template v-if="mostrarRendaFixa">

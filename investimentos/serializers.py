@@ -16,7 +16,7 @@ class AtivoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ativo
         fields = [
-            'id', 'ticker', 'nome', 'tipo', 'tipo_display', 'coingecko_id',
+            'id', 'ticker', 'nome', 'tipo', 'tipo_display', 'coingecko_id', 'moeda',
             'indexador', 'indexador_display', 'taxa_contratada', 'valor_aplicado', 'data_aplicacao',
             'quantidade', 'preco_medio_compra', 'valor_investido',
             'ativo_flag', 'criado_em', 'atualizado_em',

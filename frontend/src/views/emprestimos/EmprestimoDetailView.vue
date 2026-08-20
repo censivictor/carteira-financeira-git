@@ -56,7 +56,7 @@ onMounted(carregarTudo)
     <LoaderCircle :size="28" class="animate-spin" />
   </div>
 
-  <div v-else class="space-y-6">
+  <div v-else class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <RouterLink to="/emprestimos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">

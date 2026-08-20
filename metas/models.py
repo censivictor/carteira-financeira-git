@@ -17,6 +17,14 @@ class MetaFinanceira(models.Model):
     nome = models.CharField(max_length=150, help_text='Ex: Reserva de emergência, Viagem pra Europa.')
     valor_alvo = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     data_alvo = models.DateField(blank=True, null=True, help_text='Data em que você quer atingir a meta (opcional).')
+    # Ex: "reserva de emergência" = esses ativos da carteira, sem precisar
+    # digitar aporte manual toda vez que o valor deles muda. M2M simples (sem
+    # through-model) porque não há nenhum dado extra por vínculo — só a
+    # relação em si.
+    ativos = models.ManyToManyField(
+        'investimentos.Ativo', blank=True, related_name='metas',
+        help_text='Ativos da carteira que contam pro valor guardado dessa meta.',
+    )
     criado_em = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -32,7 +40,18 @@ class MetaFinanceira(models.Model):
         aportado = self.aportes.filter(tipo=AporteMeta.Tipo.APORTE).aggregate(s=Sum('valor'))['s'] or Decimal('0')
         retirado = self.aportes.filter(tipo=AporteMeta.Tipo.RETIRADA).aggregate(s=Sum('valor'))['s'] or Decimal('0')
         saldo = aportado - retirado
-        return saldo if saldo > 0 else Decimal('0')
+        saldo = saldo if saldo > 0 else Decimal('0')
+
+        # Ativos vinculados contam pelo valor de mercado ATUAL (igual todo o
+        # resto do app trata "valor" — nunca custo/valor aplicado), reaproveitando
+        # a mesma lógica de cotação+fallback do dashboard — ver
+        # investimentos/services.py::avaliar_ativos. Só bate na API de
+        # cotação se a meta realmente tiver ativo vinculado.
+        if self.pk and self.ativos.exists():
+            from investimentos import services
+            saldo += sum(services.avaliar_ativos(self.ativos.all()).values(), Decimal('0'))
+
+        return saldo
 
     @property
     def pct(self) -> float:
