@@ -24,24 +24,27 @@
 }
 
 @layer components {
+  /* Densidade: p-5/py-2.5 originais deixavam espaço em branco demais pra um
+     dashboard com bastante dado por tela — essas 4 classes são o choke point
+     (reusadas em todo o app), então apertar aqui cascateia sozinho. */
   .card {
-    @apply rounded-2xl border border-stone-200 bg-white p-5 shadow-sm;
+    @apply rounded-2xl border border-stone-200 bg-white p-4 shadow-sm;
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-wine px-4 py-2.5
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-wine px-4 py-2
       text-sm font-semibold text-white shadow-sm transition hover:bg-wine/90
       focus:outline-none focus:ring-2 focus:ring-wine/40 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2
       text-sm font-semibold text-stone-700 transition hover:bg-stone-50
       focus:outline-none focus:ring-2 focus:ring-stone-300;
   }
 
   .input {
-    @apply w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2.5 text-sm text-stone-800
+    @apply w-full rounded-xl border border-stone-300 bg-white px-3.5 py-2 text-sm text-stone-800
       placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-wine/30 focus:border-wine/50;
   }
 }

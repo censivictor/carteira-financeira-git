@@ -39,7 +39,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Categorias de despesa</h1>
       <RouterLink to="/financas/categorias/nova" class="btn-primary">
@@ -65,12 +65,12 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="c in categorias" :key="c.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">
+            <td class="py-2">
               <span class="rounded-full px-2.5 py-0.5 text-xs font-medium text-white" :style="{ backgroundColor: c.cor }">{{ c.nome }}</span>
             </td>
-            <td class="py-2.5 text-stone-500">{{ c.cor }}</td>
-            <td class="py-2.5 text-right text-stone-700">{{ c.orcamento_mensal ? formatarMoeda(c.orcamento_mensal) : '—' }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-stone-500">{{ c.cor }}</td>
+            <td class="py-2 text-right text-stone-700">{{ c.orcamento_mensal ? formatarMoeda(c.orcamento_mensal) : '—' }}</td>
+            <td class="py-2 text-right">
               <RouterLink :to="`/financas/categorias/${c.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(c)">Excluir</button>
             </td>

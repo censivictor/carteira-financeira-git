@@ -63,9 +63,15 @@ class CotacoesAPIView(APIView):
         ativos = Ativo.objects.filter(usuario=request.user, ativo_flag=True)
         tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
         cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
+        # Moedas de exibição != BRL realmente em uso — normalmente nenhuma,
+        # então não gera chamada extra à API pra quem nunca mexeu nisso.
+        moedas_nativas = {a.moeda for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.moeda != Ativo.Moeda.BRL}
 
         cotacoes_acoes = services.get_cotacoes_acoes(tickers)
         cotacoes_cripto = services.get_cotacoes_cripto(cripto_ids)
+        cotacoes_cripto_nativa = {
+            moeda: services.get_cotacoes_cripto(cripto_ids, vs=moeda.lower()) for moeda in moedas_nativas
+        }
 
         resultado = {}
         for ativo in ativos:
@@ -77,11 +83,16 @@ class CotacoesAPIView(APIView):
                 continue
 
             preco = info.get('preco')
-            resultado[ativo.ticker] = {
+            item = {
                 'preco': preco,
                 'variacao_dia_pct': info.get('variacao_dia_pct'),
                 'valor_atual': float(ativo.quantidade) * preco if preco is not None else None,
             }
+            if ativo.tipo == Ativo.Tipo.CRIPTO and ativo.moeda != Ativo.Moeda.BRL:
+                info_nativa = cotacoes_cripto_nativa.get(ativo.moeda, {}).get(ativo.coingecko_id, {})
+                item['preco_nativo'] = info_nativa.get('preco')
+                item['moeda'] = ativo.moeda
+            resultado[ativo.ticker] = item
         return Response(resultado)
 
 

@@ -42,7 +42,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Receitas</h1>
       <div class="flex gap-2">
@@ -72,11 +72,11 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="r in receitas" :key="r.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ formatarData(r.data) }}</td>
-            <td class="py-2.5">{{ r.descricao }}</td>
-            <td class="py-2.5 text-stone-500">{{ r.tipo_display }}</td>
-            <td class="py-2.5 text-right pr-4">{{ formatarMoeda(r.valor) }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2">{{ formatarData(r.data) }}</td>
+            <td class="py-2">{{ r.descricao }}</td>
+            <td class="py-2 text-stone-500">{{ r.tipo_display }}</td>
+            <td class="py-2 text-right pr-4">{{ formatarMoeda(r.valor) }}</td>
+            <td class="py-2 text-right">
               <RouterLink :to="`/financas/receitas/${r.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(r)">Excluir</button>
             </td>

@@ -94,7 +94,7 @@ onMounted(carregarTudo)
     <LoaderCircle :size="28" class="animate-spin" />
   </div>
 
-  <div v-else class="space-y-6">
+  <div v-else class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <RouterLink to="/investimentos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
@@ -154,17 +154,17 @@ onMounted(carregarTudo)
         </thead>
         <tbody>
           <tr v-for="t in transacoes" :key="t.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ formatarData(t.data) }}</td>
-            <td class="py-2.5">
+            <td class="py-2">{{ formatarData(t.data) }}</td>
+            <td class="py-2">
               <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="t.tipo === 'COMPRA' ? 'bg-emerald-100 text-emerald-700' : 'bg-red/10 text-red'">
                 {{ t.tipo_display }}
               </span>
             </td>
-            <td class="py-2.5 text-right">{{ t.quantidade }}</td>
-            <td class="py-2.5 text-right">{{ formatarPreco(t.preco_unitario) }}</td>
-            <td class="py-2.5 pr-4 text-right">{{ formatarMoeda(t.valor_total) }}</td>
-            <td class="py-2.5 text-stone-500">{{ t.observacao || '—' }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right">{{ t.quantidade }}</td>
+            <td class="py-2 text-right">{{ formatarPreco(t.preco_unitario) }}</td>
+            <td class="py-2 pr-4 text-right">{{ formatarMoeda(t.valor_total) }}</td>
+            <td class="py-2 text-stone-500">{{ t.observacao || '—' }}</td>
+            <td class="py-2 text-right">
               <button type="button" class="text-xs font-medium text-red hover:underline" @click="pedirExclusaoTransacao(t)">Excluir</button>
             </td>
           </tr>
@@ -190,12 +190,12 @@ onMounted(carregarTudo)
         </thead>
         <tbody>
           <tr v-for="p in proventos" :key="p.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ formatarData(p.data_com) }}</td>
-            <td class="py-2.5"><span class="rounded-full bg-coral/20 px-2.5 py-0.5 text-xs font-medium text-wine">{{ p.tipo_display }}</span></td>
-            <td class="py-2.5 text-right">R$ {{ Number(p.valor_por_cota).toFixed(6) }}</td>
-            <td class="py-2.5 text-right">{{ p.quantidade_na_data }}</td>
-            <td class="py-2.5 text-right">{{ formatarMoeda(p.valor_total) }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2">{{ formatarData(p.data_com) }}</td>
+            <td class="py-2"><span class="rounded-full bg-coral/20 px-2.5 py-0.5 text-xs font-medium text-wine">{{ p.tipo_display }}</span></td>
+            <td class="py-2 text-right">R$ {{ Number(p.valor_por_cota).toFixed(6) }}</td>
+            <td class="py-2 text-right">{{ p.quantidade_na_data }}</td>
+            <td class="py-2 text-right">{{ formatarMoeda(p.valor_total) }}</td>
+            <td class="py-2 text-right">
               <button type="button" class="text-xs font-medium text-red hover:underline" @click="pedirExclusaoProvento(p)">Excluir</button>
             </td>
           </tr>

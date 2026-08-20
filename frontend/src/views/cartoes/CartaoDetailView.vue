@@ -90,7 +90,7 @@ onMounted(carregarTudo)
     <LoaderCircle :size="28" class="animate-spin" />
   </div>
 
-  <div v-else class="space-y-6">
+  <div v-else class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
         <RouterLink to="/cartoes" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
@@ -142,16 +142,16 @@ onMounted(carregarTudo)
         </thead>
         <tbody>
           <tr v-for="f in faturas" :key="f.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ String(f.mes).padStart(2, '0') }}/{{ f.ano }}</td>
-            <td class="py-2.5 text-right font-medium">{{ formatarMoeda(f.valor_total) }}</td>
-            <td class="py-2.5">{{ formatarData(f.data_vencimento) }}</td>
-            <td class="py-2.5">
+            <td class="py-2">{{ String(f.mes).padStart(2, '0') }}/{{ f.ano }}</td>
+            <td class="py-2 text-right font-medium">{{ formatarMoeda(f.valor_total) }}</td>
+            <td class="py-2">{{ formatarData(f.data_vencimento) }}</td>
+            <td class="py-2">
               <span v-if="f.paga" class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
                 <Check :size="12" /> Paga
               </span>
               <span v-else class="rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-medium text-stone-500">Aberta</span>
             </td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right">
               <button v-if="!f.paga" type="button" class="text-xs font-medium text-wine hover:underline" @click="pedirPagamento(f)">Pagar fatura</button>
               <span v-else class="text-xs text-stone-400">{{ formatarData(f.data_pagamento) }}</span>
             </td>
@@ -179,11 +179,11 @@ onMounted(carregarTudo)
         </thead>
         <tbody>
           <tr v-for="c in compras" :key="c.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ formatarData(c.data_compra) }}</td>
-            <td class="py-2.5">{{ c.descricao }}</td>
-            <td class="py-2.5 text-right">{{ formatarMoeda(c.valor_total) }}</td>
-            <td class="py-2.5 text-right">{{ c.numero_parcelas }}x</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2">{{ formatarData(c.data_compra) }}</td>
+            <td class="py-2">{{ c.descricao }}</td>
+            <td class="py-2 text-right">{{ formatarMoeda(c.valor_total) }}</td>
+            <td class="py-2 text-right">{{ c.numero_parcelas }}x</td>
+            <td class="py-2 text-right">
               <button type="button" class="text-xs font-medium text-red hover:underline" @click="pedirExclusaoCompra(c)">Excluir</button>
             </td>
           </tr>

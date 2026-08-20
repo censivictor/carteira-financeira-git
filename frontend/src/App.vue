@@ -59,7 +59,7 @@ async function sair() {
           v-for="item in navItems"
           :key="item.label"
           :to="item.disponivel ? item.to : '#'"
-          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition"
+          class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition"
           :class="[
             item.disponivel
               ? 'text-stone-600 hover:bg-peach/20 hover:text-wine'

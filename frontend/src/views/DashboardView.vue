@@ -90,7 +90,7 @@ const opcoesComparacao = {
 
   <div v-else-if="erro" class="card text-red">{{ erro }}</div>
 
-  <div v-else class="space-y-6">
+  <div v-else class="space-y-4">
     <h1 class="text-2xl font-bold text-stone-800">Dashboard</h1>
 
     <!-- Alerta de orçamento -->
@@ -202,13 +202,13 @@ const opcoesComparacao = {
         </thead>
         <tbody>
           <tr v-for="a in dados.alocacao_alvo" :key="a.tipo" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5 font-medium text-stone-700">{{ a.tipo_display }}</td>
-            <td class="py-2.5 text-right">{{ formatarPct(a.pct_atual, 1) }}</td>
-            <td class="py-2.5 text-right text-stone-500">{{ formatarPct(a.pct_alvo, 1) }}</td>
-            <td class="py-2.5 text-right font-medium" :class="Math.abs(a.desvio_pct) < 2 ? 'text-stone-400' : a.desvio_pct > 0 ? 'text-red' : 'text-wine'">
+            <td class="py-2 font-medium text-stone-700">{{ a.tipo_display }}</td>
+            <td class="py-2 text-right">{{ formatarPct(a.pct_atual, 1) }}</td>
+            <td class="py-2 text-right text-stone-500">{{ formatarPct(a.pct_alvo, 1) }}</td>
+            <td class="py-2 text-right font-medium" :class="Math.abs(a.desvio_pct) < 2 ? 'text-stone-400' : a.desvio_pct > 0 ? 'text-red' : 'text-wine'">
               {{ a.desvio_pct > 0 ? '+' : '' }}{{ formatarPct(a.desvio_pct, 1) }}
             </td>
-            <td class="py-2.5 text-stone-500">
+            <td class="py-2 text-stone-500">
               <span v-if="Math.abs(a.desvio_pct) < 2">dentro do alvo</span>
               <span v-else-if="a.valor_para_ajustar > 0">comprar ~{{ formatarMoeda(a.valor_para_ajustar) }}</span>
               <span v-else>reduzir ~{{ formatarMoeda(-a.valor_para_ajustar) }}</span>
@@ -293,6 +293,10 @@ const opcoesComparacao = {
             <td class="py-2 text-right text-stone-700">
               {{ a.preco_atual !== null ? (a.tipo_code === 'CRIPTO' ? formatarMoedaPrecisa(a.preco_atual) : formatarMoeda(a.preco_atual)) : '—' }}
               <span v-if="!a.cotacao_disponivel" class="ml-1 rounded-full bg-peach/30 px-2 py-0.5 text-[10px] text-wine">estimativa</span>
+              <!-- preco_atual acima é sempre BRL (alimenta o total do patrimônio) — isso é só a leitura extra na moeda de exibição escolhida pro ativo -->
+              <div v-if="a.preco_atual_nativo !== null" class="text-xs text-stone-400">
+                ≈ {{ formatarMoedaPrecisa(a.preco_atual_nativo, a.moeda) }}
+              </div>
             </td>
             <td class="py-2 text-right text-stone-700">{{ formatarMoeda(a.valor_atual) }}</td>
             <td class="py-2 text-right font-medium" :class="a.ganho_perda_pct >= 0 ? 'text-emerald-600' : 'text-red'">

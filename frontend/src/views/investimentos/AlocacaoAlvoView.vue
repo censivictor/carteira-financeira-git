@@ -49,7 +49,7 @@ async function salvar() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-md space-y-6">
+  <div class="mx-auto max-w-md space-y-4">
     <div>
       <RouterLink to="/investimentos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
         <ArrowLeft :size="14" /> Investimentos

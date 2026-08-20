@@ -37,6 +37,10 @@ async function aoEnviar() {
       </div>
 
       <form class="card space-y-4" @submit.prevent="aoEnviar">
+        <div v-if="erros.detail" class="rounded-xl bg-red/10 px-4 py-3 text-sm text-red">
+          {{ erros.detail }}
+        </div>
+
         <div>
           <label for="username" class="mb-1.5 block text-sm font-medium text-stone-700">Usuário</label>
           <input id="username" v-model="username" type="text" class="input" autofocus required />

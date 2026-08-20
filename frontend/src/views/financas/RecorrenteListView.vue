@@ -32,7 +32,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Despesas recorrentes</h1>
       <RouterLink to="/financas/recorrentes/nova" class="btn-primary">
@@ -58,16 +58,16 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="r in recorrentes" :key="r.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5">{{ r.descricao }}</td>
-            <td class="py-2.5 text-stone-500">{{ r.categoria_nome }}</td>
-            <td class="py-2.5 text-right pr-4">{{ formatarMoeda(r.valor) }}</td>
-            <td class="py-2.5 text-right pr-4">{{ r.dia_do_mes }}</td>
-            <td class="py-2.5">
+            <td class="py-2">{{ r.descricao }}</td>
+            <td class="py-2 text-stone-500">{{ r.categoria_nome }}</td>
+            <td class="py-2 text-right pr-4">{{ formatarMoeda(r.valor) }}</td>
+            <td class="py-2 text-right pr-4">{{ r.dia_do_mes }}</td>
+            <td class="py-2">
               <span class="rounded-full px-2.5 py-0.5 text-xs font-medium" :class="r.ativa ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'">
                 {{ r.ativa ? 'Ativa' : 'Pausada' }}
               </span>
             </td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right">
               <RouterLink :to="`/financas/recorrentes/${r.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(r)">Excluir</button>
             </td>

@@ -24,7 +24,11 @@ import requests
 from django.conf import settings
 from django.core.cache import cache
 
+from .models import Ativo
+
 logger = logging.getLogger(__name__)
+
+TIPOS_COTADOS_B3 = (Ativo.Tipo.ACAO, Ativo.Tipo.FII)
 
 TIMEOUT = 5
 STALE_TTL = 60 * 60 * 24  # 24h
@@ -332,3 +336,69 @@ def get_variacao_ibovespa(data_inicial: date) -> dict | None:
     except (requests.RequestException, ValueError, KeyError, IndexError) as exc:
         logger.warning('Falha ao buscar variação do Ibovespa (desde %s): %s', data_inicial, exc)
         return cache.get(chave_stale)
+
+
+def avaliar_ativo(
+    ativo: Ativo, cotacoes_acoes: dict, cotacoes_cripto: dict, cotacoes_cripto_nativa: dict | None = None,
+) -> dict:
+    """Valor de mercado atual de UM ativo, a partir do batch de cotações que
+    o chamador já buscou (esta função nunca chama a API — quem monta
+    `cotacoes_acoes`/`cotacoes_cripto` é responsável por fazer isso em lote,
+    ver módulo docstring). Sem cotação disponível, cai no preço médio de
+    compra (Ação/FII/Cripto) ou no valor aplicado (Renda Fixa) — nunca deixa
+    o card de patrimônio zerado só porque a API externa caiu.
+
+    `valor_atual`/`preco_atual` SEMPRE em BRL, independente de `ativo.moeda`
+    — é o que alimenta os totais do patrimônio, então precisa ser uma moeda
+    só pra todo mundo. `cotacoes_cripto_nativa` (opcional) é
+    {moeda: {coingecko_id: info}} com a cotação na moeda de EXIBIÇÃO do
+    ativo (só relevante pra Cripto com `moeda != BRL`) — puramente
+    informativo, vira `preco_atual_nativo` no retorno, sem afetar nada mais.
+
+    Retorna {'valor_atual': Decimal, 'preco_atual': Decimal|None,
+    'cotacao_disponivel': bool, 'preco_atual_nativo': Decimal|None}.
+    """
+    preco_atual_nativo = None
+    if ativo.tipo in TIPOS_COTADOS_B3:
+        info = cotacoes_acoes.get(ativo.ticker, {})
+        preco = info.get('preco')
+        cotacao_disponivel = preco is not None
+        preco_atual = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
+        valor_atual = (ativo.quantidade or Decimal('0')) * (preco_atual or Decimal('0'))
+    elif ativo.tipo == Ativo.Tipo.CRIPTO:
+        info = cotacoes_cripto.get(ativo.coingecko_id, {})
+        preco = info.get('preco')
+        cotacao_disponivel = preco is not None
+        preco_atual = Decimal(str(preco)) if cotacao_disponivel else ativo.preco_medio_compra
+        valor_atual = (ativo.quantidade or Decimal('0')) * (preco_atual or Decimal('0'))
+        if ativo.moeda != Ativo.Moeda.BRL and cotacoes_cripto_nativa:
+            info_nativa = cotacoes_cripto_nativa.get(ativo.moeda, {}).get(ativo.coingecko_id, {})
+            preco_nativo = info_nativa.get('preco')
+            if preco_nativo is not None:
+                preco_atual_nativo = Decimal(str(preco_nativo))
+    else:  # RENDA_FIXA — sem cotação de mercado, valor estimado via taxa do BCB
+        valor_calculado = calcular_valor_atual_renda_fixa(ativo)
+        cotacao_disponivel = valor_calculado is not None
+        valor_atual = valor_calculado if cotacao_disponivel else (ativo.valor_aplicado or Decimal('0'))
+        preco_atual = None
+
+    return {
+        'valor_atual': valor_atual, 'preco_atual': preco_atual, 'cotacao_disponivel': cotacao_disponivel,
+        'preco_atual_nativo': preco_atual_nativo,
+    }
+
+
+def avaliar_ativos(ativos) -> dict:
+    """Versão em lote de `avaliar_ativo`: busca as cotações necessárias (uma
+    chamada por tipo pro batch inteiro, nunca uma por ativo) e devolve
+    {ativo.id: Decimal valor_atual} — pra quem só precisa do total, ex.
+    `MetaFinanceira.valor_atual` (metas/models.py). O dashboard
+    (`core/views.py::build_dashboard_data`) não usa esta função porque já
+    busca as cotações em lote sozinho e chama `avaliar_ativo` direto, pra
+    não buscar a mesma cotação duas vezes."""
+    ativos = list(ativos)
+    tickers = [a.ticker for a in ativos if a.tipo in TIPOS_COTADOS_B3]
+    cripto_ids = [a.coingecko_id for a in ativos if a.tipo == Ativo.Tipo.CRIPTO and a.coingecko_id]
+    cotacoes_acoes = get_cotacoes_acoes(tickers)
+    cotacoes_cripto = get_cotacoes_cripto(cripto_ids)
+    return {a.id: avaliar_ativo(a, cotacoes_acoes, cotacoes_cripto)['valor_atual'] for a in ativos}

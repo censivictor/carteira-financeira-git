@@ -16,7 +16,7 @@ const cores = {
 <template>
   <div class="card">
     <div class="text-sm text-stone-500">{{ label }}</div>
-    <div class="mt-1 text-2xl font-bold" :class="cores[variant]">{{ value }}</div>
-    <div v-if="hint" class="mt-1 text-xs text-stone-400">{{ hint }}</div>
+    <div class="mt-0.5 text-xl font-bold" :class="cores[variant]">{{ value }}</div>
+    <div v-if="hint" class="mt-0.5 text-xs text-stone-400">{{ hint }}</div>
   </div>
 </template>

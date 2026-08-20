@@ -16,6 +16,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from .views import build_dashboard_data
@@ -30,6 +31,11 @@ class DashboardAPIView(APIView):
 
 class LoginAPIView(APIView):
     permission_classes = [AllowAny]
+    # Sem isso dava pra tentar senha errada infinitamente — 10/min por IP
+    # segura brute-force sem incomodar um usuário de verdade errando a senha
+    # uma ou duas vezes.
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth-login'
 
     def post(self, request):
         username = request.data.get('username', '')
@@ -46,6 +52,10 @@ class SignupAPIView(APIView):
     LoginAPIView). Erros voltam por campo — mesmo formato que os forms de
     Finanças já sabem exibir (`e.data.<campo>[0]`)."""
     permission_classes = [AllowAny]
+    # Mais apertado que o login — não tem motivo legítimo pra criar várias
+    # contas por minuto do mesmo IP.
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'auth-signup'
 
     def post(self, request):
         username = (request.data.get('username') or '').strip()

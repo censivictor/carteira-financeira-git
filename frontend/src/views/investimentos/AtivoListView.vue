@@ -41,7 +41,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-bold text-stone-800">Investimentos</h1>
       <div class="flex gap-2">
@@ -73,24 +73,24 @@ onMounted(carregar)
         </thead>
         <tbody>
           <tr v-for="a in ativos" :key="a.id" class="border-b border-stone-100 last:border-0">
-            <td class="py-2.5 font-medium text-wine">
+            <td class="py-2 font-medium text-wine">
               <RouterLink v-if="a.tipo !== 'RENDA_FIXA'" :to="`/investimentos/${a.id}`" class="hover:underline">
                 {{ a.ticker }}
               </RouterLink>
               <span v-else>{{ a.ticker }}</span>
             </td>
-            <td class="py-2.5 text-stone-500">{{ a.nome || '—' }}</td>
-            <td class="py-2.5 text-stone-500">{{ a.tipo_display }}</td>
+            <td class="py-2 text-stone-500">{{ a.nome || '—' }}</td>
+            <td class="py-2 text-stone-500">{{ a.tipo_display }}</td>
             <template v-if="a.tipo === 'RENDA_FIXA'">
-              <td class="py-2.5 text-right text-stone-700">{{ a.indexador_display }} · {{ a.taxa_contratada }}%</td>
-              <td class="py-2.5 text-right text-stone-700">desde {{ formatarData(a.data_aplicacao) }}</td>
+              <td class="py-2 text-right text-stone-700">{{ a.indexador_display }} · {{ a.taxa_contratada }}%</td>
+              <td class="py-2 text-right text-stone-700">desde {{ formatarData(a.data_aplicacao) }}</td>
             </template>
             <template v-else>
-              <td class="py-2.5 text-right text-stone-700">{{ a.quantidade }}</td>
-              <td class="py-2.5 text-right text-stone-700">{{ formatarPreco(a.preco_medio_compra, a.tipo) }}</td>
+              <td class="py-2 text-right text-stone-700">{{ a.quantidade }}</td>
+              <td class="py-2 text-right text-stone-700">{{ formatarPreco(a.preco_medio_compra, a.tipo) }}</td>
             </template>
-            <td class="py-2.5 text-right text-stone-700">{{ formatarMoeda(a.valor_investido) }}</td>
-            <td class="py-2.5 text-right">
+            <td class="py-2 text-right text-stone-700">{{ formatarMoeda(a.valor_investido) }}</td>
+            <td class="py-2 text-right">
               <RouterLink :to="`/investimentos/${a.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
               <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(a)">Excluir</button>
             </td>
