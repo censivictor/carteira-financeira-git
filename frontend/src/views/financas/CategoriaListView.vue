@@ -40,8 +40,8 @@ onMounted(carregar)
 
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold text-stone-800">Categorias de despesa</h1>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">Categorias de despesa</h1>
       <RouterLink to="/financas/categorias/nova" class="btn-primary">
         <Plus :size="16" /> Nova categoria
       </RouterLink>

@@ -54,7 +54,7 @@ async function salvar() {
       <RouterLink to="/investimentos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
         <ArrowLeft :size="14" /> Investimentos
       </RouterLink>
-      <h1 class="text-2xl font-bold text-stone-800">Alocação-alvo</h1>
+      <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">Alocação-alvo</h1>
       <p class="mt-1 text-sm text-stone-500">
         Defina o % desejado de cada classe na sua carteira. O dashboard compara com a alocação atual e sugere ajuste.
       </p>

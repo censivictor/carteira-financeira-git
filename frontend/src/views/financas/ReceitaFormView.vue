@@ -42,7 +42,7 @@ async function salvar() {
 
 <template>
   <div class="mx-auto max-w-md space-y-4">
-    <h1 class="text-2xl font-bold text-stone-800">{{ editando ? 'Editar receita' : 'Nova receita' }}</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">{{ editando ? 'Editar receita' : 'Nova receita' }}</h1>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">
       <LoaderCircle :size="24" class="animate-spin" />

@@ -57,12 +57,12 @@ onMounted(carregarTudo)
   </div>
 
   <div v-else class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <RouterLink to="/metas" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
           <ArrowLeft :size="14" /> Metas
         </RouterLink>
-        <h1 class="text-2xl font-bold text-stone-800">{{ meta.nome }}</h1>
+        <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">{{ meta.nome }}</h1>
       </div>
       <div class="flex gap-2">
         <button type="button" class="btn-secondary" @click="modalRetirada = true">

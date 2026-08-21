@@ -125,7 +125,7 @@ async function confirmarImportacao() {
       <RouterLink to="/financas/despesas" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
         <ArrowLeft :size="14" /> Despesas
       </RouterLink>
-      <h1 class="text-2xl font-bold text-stone-800">Importar extrato</h1>
+      <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">Importar extrato</h1>
     </div>
 
     <!-- Upload -->

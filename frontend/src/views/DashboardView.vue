@@ -91,7 +91,7 @@ const opcoesComparacao = {
   <div v-else-if="erro" class="card text-red">{{ erro }}</div>
 
   <div v-else class="space-y-4">
-    <h1 class="text-2xl font-bold text-stone-800">Dashboard</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">Dashboard</h1>
 
     <!-- Alerta de orçamento -->
     <div v-if="categoriasEstouradas.length" class="card border-l-4 border-l-red bg-red/5">
@@ -112,18 +112,32 @@ const opcoesComparacao = {
 
     <!-- Métricas principais -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <MetricCard label="Patrimônio investido" :value="formatarMoeda(dados.patrimonio_total)" />
       <MetricCard
+        class="animate-rise-in"
+        style="animation-delay: 0ms"
+        label="Patrimônio investido"
+        :value="formatarMoeda(dados.patrimonio_total)"
+      />
+      <MetricCard
+        class="animate-rise-in"
+        style="animation-delay: 60ms"
         label="Ganho/perda da carteira"
         :value="formatarPct(dados.ganho_perda_total_pct)"
         :variant="dados.ganho_perda_total_pct >= 0 ? 'gain' : 'loss'"
       />
       <MetricCard
+        class="animate-rise-in"
+        style="animation-delay: 120ms"
         label="Saldo do mês (renda - gastos)"
         :value="formatarMoeda(dados.saldo_mes_atual)"
         :variant="dados.saldo_mes_atual >= 0 ? 'gain' : 'loss'"
       />
-      <MetricCard label="% da renda gasto no mês" :value="dados.pct_gasto_da_renda !== null ? formatarPct(dados.pct_gasto_da_renda, 1) : '—'" />
+      <MetricCard
+        class="animate-rise-in"
+        style="animation-delay: 180ms"
+        label="% da renda gasto no mês"
+        :value="dados.pct_gasto_da_renda !== null ? formatarPct(dados.pct_gasto_da_renda, 1) : '—'"
+      />
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -144,7 +158,7 @@ const opcoesComparacao = {
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div class="card">
         <div class="text-sm text-stone-500">Receita deste mês</div>
-        <div class="mt-1 text-xl font-semibold text-stone-800">{{ formatarMoeda(dados.receita_mes_atual) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarMoeda(dados.receita_mes_atual) }}</div>
         <span
           v-if="dados.variacao_receita_pct !== null"
           class="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -156,7 +170,7 @@ const opcoesComparacao = {
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Despesas deste mês</div>
-        <div class="mt-1 text-xl font-semibold text-stone-800">{{ formatarMoeda(dados.despesa_mes_atual) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarMoeda(dados.despesa_mes_atual) }}</div>
         <span
           v-if="dados.variacao_despesa_pct !== null"
           class="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
