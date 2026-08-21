@@ -62,7 +62,7 @@ async function salvar() {
 
 <template>
   <div class="mx-auto max-w-md space-y-4">
-    <h1 class="text-2xl font-bold text-stone-800">{{ editando ? 'Editar empréstimo' : 'Novo empréstimo' }}</h1>
+    <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">{{ editando ? 'Editar empréstimo' : 'Novo empréstimo' }}</h1>
 
     <div v-if="carregando" class="flex h-40 items-center justify-center text-stone-400">
       <LoaderCircle :size="24" class="animate-spin" />
@@ -85,7 +85,7 @@ async function salvar() {
         <p v-if="erros.valor_total" class="mt-1 text-xs text-red">{{ erros.valor_total[0] }}</p>
       </div>
 
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label class="mb-1.5 block text-sm font-medium text-stone-700">Juros</label>
           <input v-model="form.taxa_juros" type="number" step="any" min="0" placeholder="Ex: 1,5" class="input" required :disabled="travado" />

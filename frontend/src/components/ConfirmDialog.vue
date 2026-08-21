@@ -27,7 +27,7 @@ const emit = defineEmits(['confirm'])
     <AlertDialogPortal>
       <AlertDialogOverlay class="fixed inset-0 z-40 bg-stone-900/40" />
       <AlertDialogContent
-        class="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl focus:outline-none"
+        class="fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl focus:outline-none"
       >
         <AlertDialogTitle class="text-lg font-bold text-stone-800">{{ title }}</AlertDialogTitle>
         <AlertDialogDescription class="mt-2 text-sm text-stone-500">{{ description }}</AlertDialogDescription>

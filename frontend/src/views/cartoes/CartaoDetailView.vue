@@ -91,12 +91,12 @@ onMounted(carregarTudo)
   </div>
 
   <div v-else class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <RouterLink to="/cartoes" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
           <ArrowLeft :size="14" /> Cartões
         </RouterLink>
-        <h1 class="text-2xl font-bold text-stone-800">{{ cartao.nome }}</h1>
+        <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">{{ cartao.nome }}</h1>
       </div>
       <button type="button" class="btn-primary" @click="modalCompra = true">
         <Plus :size="16" /> Nova compra
@@ -106,17 +106,17 @@ onMounted(carregarTudo)
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div class="card">
         <div class="text-sm text-stone-500">Utilizado</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarMoeda(cartao.limite_utilizado) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarMoeda(cartao.limite_utilizado) }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Disponível</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">
           {{ cartao.limite_disponivel !== null ? formatarMoeda(cartao.limite_disponivel) : 'sem limite definido' }}
         </div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Fechamento / Vencimento</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">dia {{ cartao.dia_fechamento }} / dia {{ cartao.dia_vencimento }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">dia {{ cartao.dia_fechamento }} / dia {{ cartao.dia_vencimento }}</div>
       </div>
     </div>
 

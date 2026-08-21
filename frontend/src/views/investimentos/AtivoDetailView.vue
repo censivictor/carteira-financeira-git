@@ -95,12 +95,12 @@ onMounted(carregarTudo)
   </div>
 
   <div v-else class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <RouterLink to="/investimentos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
           <ArrowLeft :size="14" /> Investimentos
         </RouterLink>
-        <h1 class="text-2xl font-bold text-stone-800">
+        <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">
           {{ ativo.ticker }}
           <span class="text-base font-normal text-stone-400">{{ ativo.tipo_display }}{{ ativo.nome ? ' — ' + ativo.nome : '' }}</span>
         </h1>
@@ -118,19 +118,19 @@ onMounted(carregarTudo)
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3" :class="mostraProventos ? 'lg:grid-cols-4' : ''">
       <div class="card">
         <div class="text-sm text-stone-500">Quantidade atual</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ ativo.quantidade ?? 0 }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ ativo.quantidade ?? 0 }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Preço médio</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarPreco(ativo.preco_medio_compra) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarPreco(ativo.preco_medio_compra) }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Valor investido</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarMoeda(ativo.valor_investido) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarMoeda(ativo.valor_investido) }}</div>
       </div>
       <div v-if="mostraProventos" class="card">
         <div class="text-sm text-stone-500">Proventos recebidos (total)</div>
-        <div class="mt-1 text-xl font-bold text-emerald-600">{{ formatarMoeda(proventosTotal) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-emerald-600">{{ formatarMoeda(proventosTotal) }}</div>
       </div>
     </div>
 

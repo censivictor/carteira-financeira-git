@@ -57,12 +57,12 @@ onMounted(carregarTudo)
   </div>
 
   <div v-else class="space-y-4">
-    <div class="flex items-center justify-between">
+    <div class="flex flex-wrap items-center justify-between gap-3">
       <div>
         <RouterLink to="/emprestimos" class="mb-1 flex items-center gap-1 text-sm text-stone-400 hover:text-wine">
           <ArrowLeft :size="14" /> Empréstimos
         </RouterLink>
-        <h1 class="text-2xl font-bold text-stone-800">
+        <h1 class="text-3xl font-extrabold tracking-tight text-stone-800">
           {{ emprestimo.descricao }}
           <span class="text-base font-normal text-stone-400">{{ emprestimo.sistema_amortizacao_display }}</span>
         </h1>
@@ -75,21 +75,21 @@ onMounted(carregarTudo)
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div class="card">
         <div class="text-sm text-stone-500">Valor total</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ formatarMoeda(emprestimo.valor_total) }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ formatarMoeda(emprestimo.valor_total) }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Saldo devedor</div>
-        <div class="mt-1 text-xl font-bold" :class="emprestimo.quitado ? 'text-emerald-600' : 'text-stone-800'">
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums" :class="emprestimo.quitado ? 'text-emerald-600' : 'text-stone-800'">
           {{ formatarMoeda(emprestimo.saldo_devedor) }}
         </div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Juros</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ emprestimo.taxa_juros }}% {{ emprestimo.periodo_taxa_display.toLowerCase() }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ emprestimo.taxa_juros }}% {{ emprestimo.periodo_taxa_display.toLowerCase() }}</div>
       </div>
       <div class="card">
         <div class="text-sm text-stone-500">Parcelas pagas</div>
-        <div class="mt-1 text-xl font-bold text-stone-800">{{ emprestimo.parcelas_pagas_count }}/{{ emprestimo.numero_parcelas }}</div>
+        <div class="mt-1 text-xl font-bold tracking-tight tabular-nums text-stone-800">{{ emprestimo.parcelas_pagas_count }}/{{ emprestimo.numero_parcelas }}</div>
       </div>
     </div>
 
