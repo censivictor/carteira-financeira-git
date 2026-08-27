@@ -4,7 +4,8 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda } from '@/lib/format'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, CreditCard } from '@lucide/vue'
 
 const cartoes = ref([])
 const carregando = ref(true)
@@ -44,6 +45,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!cartoes.length"
+      :icon="CreditCard"
+      title="Nenhum cartão cadastrado ainda"
+      description="Cadastre seus cartões de crédito pra controlar fatura, limite e compras parceladas."
+    >
+      <RouterLink to="/cartoes/novo" class="btn-primary">
+        <Plus :size="16" /> Novo cartão
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <RouterLink v-for="c in cartoes" :key="c.id" :to="`/cartoes/${c.id}`" class="card block transition hover:border-wine/40 hover:shadow-md">
         <div class="flex items-start justify-between">
@@ -66,9 +78,6 @@ onMounted(carregar)
           <div class="mt-1 text-xs text-stone-400">{{ formatarMoeda(c.limite_disponivel) }} disponível de {{ formatarMoeda(c.limite) }}</div>
         </template>
       </RouterLink>
-      <div v-if="!cartoes.length" class="card col-span-full py-10 text-center text-stone-400">
-        Nenhum cartão cadastrado ainda.
-      </div>
     </div>
 
     <ConfirmDialog

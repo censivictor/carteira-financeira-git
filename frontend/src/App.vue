@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import fluxoLogo from '@/assets/brand/fluxo-logo-horizontal.png'
+import fluxoLogo from '@/assets/brand/fluxo-logo-horizontal-alpha.png'
 import {
   LayoutDashboard,
   Wallet,
@@ -34,12 +34,12 @@ watch(menuAberto, (aberto) => {
 
 function itemAtivo(item) {
   if (!item.disponivel) return false
-  if (item.to === '/') return route.path === '/'
+  if (item.to === '/app') return route.path === '/app'
   return route.path.startsWith(item.to)
 }
 
 const navItems = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard, disponivel: true },
+  { label: 'Dashboard', to: '/app', icon: LayoutDashboard, disponivel: true },
   { label: 'Investimentos', to: '/investimentos', icon: Wallet, disponivel: true },
   { label: 'Despesas', to: '/financas/despesas', icon: ArrowDownCircle, disponivel: true },
   { label: 'Receitas', to: '/financas/receitas', icon: ArrowUpCircle, disponivel: true },

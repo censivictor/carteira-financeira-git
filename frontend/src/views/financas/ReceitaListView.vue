@@ -5,7 +5,8 @@ import { api } from '@/lib/api'
 import { formatarMoeda, formatarData } from '@/lib/format'
 import { exportarCsv } from '@/lib/csv'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle, Download } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, Download, ArrowUpCircle, Pencil, Trash2 } from '@lucide/vue'
 
 const receitas = ref([])
 const carregando = ref(true)
@@ -59,6 +60,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!receitas.length"
+      :icon="ArrowUpCircle"
+      title="Nenhuma receita lançada ainda"
+      description="Cadastre salário, freelas e outros rendimentos pra ver seu saldo mensal completo."
+    >
+      <RouterLink to="/financas/receitas/nova" class="btn-primary">
+        <Plus :size="16" /> Nova receita
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="card overflow-x-auto">
       <table class="w-full min-w-[560px] text-sm">
         <thead>
@@ -77,12 +89,15 @@ onMounted(carregar)
             <td class="py-2 text-stone-500">{{ r.tipo_display }}</td>
             <td class="py-2 text-right pr-4">{{ formatarMoeda(r.valor) }}</td>
             <td class="py-2 text-right">
-              <RouterLink :to="`/financas/receitas/${r.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
-              <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(r)">Excluir</button>
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink :to="`/financas/receitas/${r.id}/editar`" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-wine" title="Editar">
+                  <Pencil :size="14" />
+                </RouterLink>
+                <button type="button" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-red/10 hover:text-red" title="Excluir" @click="pedirExclusao(r)">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </td>
-          </tr>
-          <tr v-if="!receitas.length">
-            <td colspan="5" class="py-10 text-center text-stone-400">Nenhuma receita lançada ainda.</td>
           </tr>
         </tbody>
       </table>

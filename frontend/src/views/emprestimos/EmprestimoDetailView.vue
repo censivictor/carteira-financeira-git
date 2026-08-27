@@ -17,6 +17,7 @@ const carregando = ref(true)
 
 const modalAmortizar = ref(false)
 const confirmPagamento = ref({ open: false, item: null })
+const mensagemAmortizacao = ref('')
 
 const proximaParcela = computed(() => parcelas.value.find((p) => !p.paga) || null)
 
@@ -45,7 +46,17 @@ async function confirmarPagamento() {
 
 async function aoAmortizar() {
   modalAmortizar.value = false
+  const pendentesAntes = parcelas.value.filter((p) => !p.paga).length
   await carregarTudo()
+  const pendentesDepois = parcelas.value.filter((p) => !p.paga).length
+  const diferenca = pendentesAntes - pendentesDepois
+  if (emprestimo.value.quitado) {
+    mensagemAmortizacao.value = 'Empréstimo quitado com esse abatimento — nenhuma parcela pendente.'
+  } else if (diferenca > 0) {
+    mensagemAmortizacao.value = `Abatimento aplicado — o empréstimo agora tem ${pendentesDepois} parcela${pendentesDepois === 1 ? '' : 's'} pendente${pendentesDepois === 1 ? '' : 's'} (eram ${pendentesAntes}).`
+  } else {
+    mensagemAmortizacao.value = `Abatimento aplicado — mesma quantidade de parcelas, valor de cada uma reduzido.`
+  }
 }
 
 onMounted(carregarTudo)
@@ -70,6 +81,11 @@ onMounted(carregarTudo)
       <button v-if="!emprestimo.quitado" type="button" class="btn-primary" @click="modalAmortizar = true">
         <Plus :size="16" /> Abater valor extra
       </button>
+    </div>
+
+    <div v-if="mensagemAmortizacao" class="flex items-start justify-between gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+      <span>{{ mensagemAmortizacao }}</span>
+      <button type="button" class="shrink-0 font-medium text-emerald-600 hover:underline" @click="mensagemAmortizacao = ''">Ok</button>
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
