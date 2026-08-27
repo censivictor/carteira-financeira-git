@@ -221,54 +221,13 @@ def build_dashboard_data(usuario):
     # Idempotente: se já existe a despesa gerada desse mês, não duplica.
     financas_services.gerar_despesas_recorrentes_do_mes(usuario, referencia=hoje)
 
-    ano_atual, mes_atual = hoje.year, hoje.month
-    ano_anterior, mes_anterior = _meses_recentes(2, referencia=hoje.replace(day=1))[0]
-
-    def total_mes(model, ano, mes):
-        return model.objects.filter(
-            usuario=usuario, data__year=ano, data__month=mes
-        ).aggregate(t=Sum('valor'))['t'] or Decimal('0')
-
-    receita_mes_atual = total_mes(Receita, ano_atual, mes_atual)
-    despesa_mes_atual = total_mes(Despesa, ano_atual, mes_atual)
-    receita_mes_anterior = total_mes(Receita, ano_anterior, mes_anterior)
-    despesa_mes_anterior = total_mes(Despesa, ano_anterior, mes_anterior)
-
-    saldo_mes_atual = receita_mes_atual - despesa_mes_atual
-    variacao_receita_pct = _variacao_pct(receita_mes_atual, receita_mes_anterior)
-    variacao_despesa_pct = _variacao_pct(despesa_mes_atual, despesa_mes_anterior)
-    pct_gasto_da_renda = float(despesa_mes_atual / receita_mes_atual * 100) if receita_mes_atual else None
-
-    # --- Gastos por categoria (mês atual) — pizza 2 ---
-    gastos_por_categoria = list(
-        Despesa.objects.filter(usuario=usuario, data__year=ano_atual, data__month=mes_atual)
-        .values('categoria__nome', 'categoria__cor')
-        .annotate(total=Sum('valor'))
-        .order_by('-total')
-    )
-
-    # --- Orçamento por categoria (mês atual) ---
-    # Mostra TODA categoria com orçamento definido, mesmo sem gasto ainda
-    # esse mês (0%) — não só as que já têm despesa lançada.
-    totais_por_categoria = {
-        g['categoria__nome']: g['total']
-        for g in Despesa.objects.filter(usuario=usuario, data__year=ano_atual, data__month=mes_atual)
-        .values('categoria__nome')
-        .annotate(total=Sum('valor'))
-    }
-    orcamentos = []
-    for cat in CategoriaDespesa.objects.filter(usuario=usuario, orcamento_mensal__isnull=False):
-        total = totais_por_categoria.get(cat.nome, Decimal('0'))
-        orcamentos.append({
-            'categoria': cat.nome,
-            'cor': cat.cor,
-            'total': float(total),
-            'orcamento': float(cat.orcamento_mensal),
-            'pct': float(total / cat.orcamento_mensal * 100) if cat.orcamento_mensal else 0,
-        })
-    orcamentos.sort(key=lambda o: o['pct'], reverse=True)
-
     # --- Evolução mensal (últimos 12 meses) ---
+    # Calculado aqui (antes das seções que usam só "mês atual"/"mês
+    # anterior") de propósito: esses totais são um subconjunto do que já
+    # vem nesses dois dicts, então reaproveitar evita rodar 4 queries a mais
+    # buscando o mesmo dado de novo. Cada query é uma ida-e-volta ao banco —
+    # em produção (Render e Neon em regiões diferentes) isso pesa bem mais
+    # no tempo de resposta do dashboard do que o volume de dados em si.
     meses = _meses_recentes(12, referencia=hoje.replace(day=1))
 
     receitas_por_mes = {
@@ -286,6 +245,45 @@ def build_dashboard_data(usuario):
     evolucao_receitas = [float(receitas_por_mes.get(chave, 0)) for chave in meses]
     evolucao_despesas = [float(despesas_por_mes.get(chave, 0)) for chave in meses]
     evolucao_saldo = [r - d for r, d in zip(evolucao_receitas, evolucao_despesas)]
+
+    ano_atual, mes_atual = hoje.year, hoje.month
+    ano_anterior, mes_anterior = _meses_recentes(2, referencia=hoje.replace(day=1))[0]
+
+    receita_mes_atual = receitas_por_mes.get((ano_atual, mes_atual), Decimal('0'))
+    despesa_mes_atual = despesas_por_mes.get((ano_atual, mes_atual), Decimal('0'))
+    receita_mes_anterior = receitas_por_mes.get((ano_anterior, mes_anterior), Decimal('0'))
+    despesa_mes_anterior = despesas_por_mes.get((ano_anterior, mes_anterior), Decimal('0'))
+
+    saldo_mes_atual = receita_mes_atual - despesa_mes_atual
+    variacao_receita_pct = _variacao_pct(receita_mes_atual, receita_mes_anterior)
+    variacao_despesa_pct = _variacao_pct(despesa_mes_atual, despesa_mes_anterior)
+    pct_gasto_da_renda = float(despesa_mes_atual / receita_mes_atual * 100) if receita_mes_atual else None
+
+    # --- Gastos por categoria (mês atual) — pizza 2 ---
+    gastos_por_categoria = list(
+        Despesa.objects.filter(usuario=usuario, data__year=ano_atual, data__month=mes_atual)
+        .values('categoria__nome', 'categoria__cor')
+        .annotate(total=Sum('valor'))
+        .order_by('-total')
+    )
+
+    # --- Orçamento por categoria (mês atual) ---
+    # Mostra TODA categoria com orçamento definido, mesmo sem gasto ainda
+    # esse mês (0%) — não só as que já têm despesa lançada. Reaproveita
+    # gastos_por_categoria (mesmo agrupamento) em vez de buscar de novo só
+    # sem a cor.
+    totais_por_categoria = {g['categoria__nome']: g['total'] for g in gastos_por_categoria}
+    orcamentos = []
+    for cat in CategoriaDespesa.objects.filter(usuario=usuario, orcamento_mensal__isnull=False):
+        total = totais_por_categoria.get(cat.nome, Decimal('0'))
+        orcamentos.append({
+            'categoria': cat.nome,
+            'cor': cat.cor,
+            'total': float(total),
+            'orcamento': float(cat.orcamento_mensal),
+            'pct': float(total / cat.orcamento_mensal * 100) if cat.orcamento_mensal else 0,
+        })
+    orcamentos.sort(key=lambda o: o['pct'], reverse=True)
 
     return {
         'patrimonio_total': float(valor_atual_total),
