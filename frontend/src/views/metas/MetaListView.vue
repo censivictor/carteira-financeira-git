@@ -4,7 +4,8 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda, formatarData } from '@/lib/format'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle, Trophy } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, Trophy, Target } from '@lucide/vue'
 
 const metas = ref([])
 const carregando = ref(true)
@@ -44,6 +45,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!metas.length"
+      :icon="Target"
+      title="Nenhuma meta cadastrada ainda"
+      description="Defina uma meta financeira e vincule investimentos a ela pra acompanhar o progresso de verdade."
+    >
+      <RouterLink to="/metas/nova" class="btn-primary">
+        <Plus :size="16" /> Nova meta
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <RouterLink v-for="m in metas" :key="m.id" :to="`/metas/${m.id}`" class="card block transition hover:border-wine/40 hover:shadow-md">
         <div class="flex items-start justify-between">
@@ -64,9 +76,6 @@ onMounted(carregar)
           {{ m.pct.toFixed(0) }}%{{ m.concluida ? ' — concluída!' : '' }}
         </div>
       </RouterLink>
-      <div v-if="!metas.length" class="card col-span-full py-10 text-center text-stone-400">
-        Nenhuma meta cadastrada ainda.
-      </div>
     </div>
 
     <ConfirmDialog

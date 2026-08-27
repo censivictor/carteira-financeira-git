@@ -4,7 +4,8 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda } from '@/lib/format'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, Tags, Pencil, Trash2 } from '@lucide/vue'
 
 const categorias = ref([])
 const carregando = ref(true)
@@ -53,6 +54,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!categorias.length"
+      :icon="Tags"
+      title="Nenhuma categoria cadastrada ainda"
+      description="Crie categorias pra organizar despesas e, se quiser, definir um orçamento mensal pra cada uma."
+    >
+      <RouterLink to="/financas/categorias/nova" class="btn-primary">
+        <Plus :size="16" /> Nova categoria
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="card overflow-x-auto">
       <table class="w-full min-w-[560px] text-sm">
         <thead>
@@ -71,12 +83,15 @@ onMounted(carregar)
             <td class="py-2 text-stone-500">{{ c.cor }}</td>
             <td class="py-2 text-right text-stone-700">{{ c.orcamento_mensal ? formatarMoeda(c.orcamento_mensal) : '—' }}</td>
             <td class="py-2 text-right">
-              <RouterLink :to="`/financas/categorias/${c.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
-              <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(c)">Excluir</button>
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink :to="`/financas/categorias/${c.id}/editar`" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-wine" title="Editar">
+                  <Pencil :size="14" />
+                </RouterLink>
+                <button type="button" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-red/10 hover:text-red" title="Excluir" @click="pedirExclusao(c)">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </td>
-          </tr>
-          <tr v-if="!categorias.length">
-            <td colspan="4" class="py-10 text-center text-stone-400">Nenhuma categoria cadastrada ainda.</td>
           </tr>
         </tbody>
       </table>

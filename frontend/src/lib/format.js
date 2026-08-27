@@ -8,7 +8,13 @@ const SIMBOLOS = { BRL: 'R$', USD: 'US$', EUR: '€' }
 export function formatarMoeda(v, moeda = 'BRL') {
   if (v === null || v === undefined) return '—'
   const simbolo = SIMBOLOS[moeda] || moeda
-  return `${simbolo} ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  // Number(v) é essencial aqui: DecimalField do DRF serializa como string
+  // ("30000.00") pra não perder precisão, e String.prototype.toLocaleString
+  // ignora silenciosamente locale/options — sem isso o valor sai sem
+  // separador de milhar e com ponto em vez de vírgula ("R$30000.00" em vez
+  // de "R$ 30.000,00"). Campos que já chegam como number (ex: properties
+  // Python serializadas cru, tipo saldo_devedor) continuam funcionando igual.
+  return `${simbolo} ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // Preço unitário de cripto pode ser uma fração de centavo (ex: R$

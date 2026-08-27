@@ -3,6 +3,12 @@ import { useAuthStore } from '@/stores/auth'
 
 const routes = [
   {
+    path: '/',
+    name: 'home',
+    component: () => import('@/views/HomeView.vue'),
+    meta: { publica: true },
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
@@ -15,7 +21,7 @@ const routes = [
     meta: { publica: true },
   },
   {
-    path: '/',
+    path: '/app',
     name: 'dashboard',
     component: () => import('@/views/DashboardView.vue'),
   },
@@ -185,7 +191,7 @@ router.beforeEach(async (to) => {
   if (!to.meta.publica && !auth.isAuthenticated()) {
     return { name: 'login', query: { next: to.fullPath } }
   }
-  if ((to.name === 'login' || to.name === 'signup') && auth.isAuthenticated()) {
+  if ((to.name === 'home' || to.name === 'login' || to.name === 'signup') && auth.isAuthenticated()) {
     return { name: 'dashboard' }
   }
   return true

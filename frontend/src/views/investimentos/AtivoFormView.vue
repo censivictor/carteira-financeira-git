@@ -53,7 +53,6 @@ async function salvar() {
   erros.value = {}
   salvando.value = true
   const payload = { ...form.value }
-  // campos vazios ('') viram null pro backend não reclamar de tipo em branco
   for (const campo of ['coingecko_id', 'indexador', 'taxa_contratada', 'valor_aplicado', 'data_aplicacao']) {
     if (payload[campo] === '') payload[campo] = null
   }

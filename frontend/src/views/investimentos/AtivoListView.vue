@@ -10,7 +10,8 @@ function formatarPreco(valor, tipo) {
   return tipo === 'CRIPTO' ? formatarMoedaPrecisa(valor) : formatarMoeda(valor)
 }
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle, Target } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, Target, Wallet, Pencil, Trash2 } from '@lucide/vue'
 
 const ativos = ref([])
 const carregando = ref(true)
@@ -58,6 +59,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!ativos.length"
+      :icon="Wallet"
+      title="Nenhum ativo cadastrado ainda"
+      description="Cadastre suas ações, FIIs, cripto ou renda fixa pra acompanhar a carteira aqui."
+    >
+      <RouterLink to="/investimentos/novo" class="btn-primary">
+        <Plus :size="16" /> Novo ativo
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="card overflow-x-auto">
       <table class="w-full min-w-[720px] text-sm">
         <thead>
@@ -91,12 +103,15 @@ onMounted(carregar)
             </template>
             <td class="py-2 text-right text-stone-700">{{ formatarMoeda(a.valor_investido) }}</td>
             <td class="py-2 text-right">
-              <RouterLink :to="`/investimentos/${a.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
-              <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(a)">Excluir</button>
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink :to="`/investimentos/${a.id}/editar`" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-wine" title="Editar">
+                  <Pencil :size="14" />
+                </RouterLink>
+                <button type="button" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-red/10 hover:text-red" title="Excluir" @click="pedirExclusao(a)">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </td>
-          </tr>
-          <tr v-if="!ativos.length">
-            <td colspan="7" class="py-10 text-center text-stone-400">Nenhum ativo cadastrado ainda.</td>
           </tr>
         </tbody>
       </table>

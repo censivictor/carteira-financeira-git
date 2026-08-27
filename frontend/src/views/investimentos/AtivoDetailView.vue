@@ -18,8 +18,6 @@ const proventos = ref([])
 const carregando = ref(true)
 
 const mostraProventos = computed(() => ativo.value && ['ACAO', 'FII'].includes(ativo.value.tipo))
-// Cripto barata tem preço unitário na casa de frações de centavo — usa
-// formatação com mais casas decimais pra não virar "R$ 0,00" na tela.
 const ehCripto = computed(() => ativo.value?.tipo === 'CRIPTO')
 const formatarPreco = (v) => (ehCripto.value ? formatarMoedaPrecisa(v) : formatarMoeda(v))
 const proventosTotal = computed(() => proventos.value.reduce((soma, p) => soma + p.valor_total, 0))
@@ -27,13 +25,6 @@ const proventosTotal = computed(() => proventos.value.reduce((soma, p) => soma +
 const modalTransacao = ref(false)
 const modalProvento = ref(false)
 
-// Estado do ConfirmDialog: `open` (booleano, controla visibilidade) fica
-// separado do item alvo (`item`) — o AlertDialogAction do reka-ui fecha o
-// diálogo (emitindo update:open=false) na MESMA interação de clique que
-// dispara @confirm, e a ordem entre os dois não é garantida. Se o item
-// alvo fosse zerado junto com o fechamento, o handler de confirmação podia
-// ler `null` antes de conseguir o id pra excluir. Por isso o item só é
-// sobrescrito na próxima vez que abrimos o diálogo, nunca zerado ao fechar.
 const confirmTransacao = ref({ open: false, item: null })
 const confirmProvento = ref({ open: false, item: null })
 

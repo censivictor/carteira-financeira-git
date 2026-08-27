@@ -4,7 +4,8 @@ import { RouterLink } from 'vue-router'
 import { api } from '@/lib/api'
 import { formatarMoeda } from '@/lib/format'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-import { Plus, LoaderCircle } from '@lucide/vue'
+import EmptyState from '@/components/EmptyState.vue'
+import { Plus, LoaderCircle, Repeat, Pencil, Trash2 } from '@lucide/vue'
 
 const recorrentes = ref([])
 const carregando = ref(true)
@@ -44,6 +45,17 @@ onMounted(carregar)
       <LoaderCircle :size="24" class="animate-spin" />
     </div>
 
+    <EmptyState
+      v-else-if="!recorrentes.length"
+      :icon="Repeat"
+      title="Nenhuma despesa recorrente cadastrada ainda"
+      description="Cadastre aluguel, assinaturas e outras despesas fixas uma vez só — a Fluxo lança elas automaticamente todo mês."
+    >
+      <RouterLink to="/financas/recorrentes/nova" class="btn-primary">
+        <Plus :size="16" /> Nova recorrência
+      </RouterLink>
+    </EmptyState>
+
     <div v-else class="card overflow-x-auto">
       <table class="w-full min-w-[620px] text-sm">
         <thead>
@@ -68,12 +80,15 @@ onMounted(carregar)
               </span>
             </td>
             <td class="py-2 text-right">
-              <RouterLink :to="`/financas/recorrentes/${r.id}/editar`" class="text-xs font-medium text-stone-500 hover:text-wine">Editar</RouterLink>
-              <button type="button" class="ml-3 text-xs font-medium text-red hover:underline" @click="pedirExclusao(r)">Excluir</button>
+              <div class="flex items-center justify-end gap-1">
+                <RouterLink :to="`/financas/recorrentes/${r.id}/editar`" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-stone-100 hover:text-wine" title="Editar">
+                  <Pencil :size="14" />
+                </RouterLink>
+                <button type="button" class="rounded-lg p-1.5 text-stone-400 transition hover:bg-red/10 hover:text-red" title="Excluir" @click="pedirExclusao(r)">
+                  <Trash2 :size="14" />
+                </button>
+              </div>
             </td>
-          </tr>
-          <tr v-if="!recorrentes.length">
-            <td colspan="6" class="py-10 text-center text-stone-400">Nenhuma despesa recorrente cadastrada ainda.</td>
           </tr>
         </tbody>
       </table>
