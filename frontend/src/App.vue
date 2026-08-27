@@ -73,7 +73,7 @@ async function sair() {
     </Transition>
 
     <aside
-      class="fixed inset-y-0 left-0 z-40 flex w-64 shrink-0 -translate-x-full flex-col border-r border-stone-200 bg-white transition-transform duration-200 ease-out md:static md:translate-x-0"
+      class="fixed inset-y-0 left-0 z-40 flex h-screen w-64 shrink-0 -translate-x-full flex-col border-r border-stone-200 bg-white transition-transform duration-200 ease-out md:translate-x-0"
       :class="menuAberto ? 'translate-x-0' : ''"
     >
       <div class="flex items-center px-6 py-6">
@@ -87,7 +87,7 @@ async function sair() {
         </button>
       </div>
 
-      <nav class="flex-1 space-y-0.5 px-3">
+      <nav class="flex-1 space-y-0.5 overflow-y-auto px-3">
         <RouterLink
           v-for="item in navItems"
           :key="item.label"
@@ -122,7 +122,7 @@ async function sair() {
       </div>
     </aside>
 
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col md:ml-64">
       <!-- Topbar (só mobile) -->
       <header class="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 md:hidden">
         <button
